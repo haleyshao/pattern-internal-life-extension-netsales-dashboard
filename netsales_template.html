@@ -1,0 +1,1183 @@
+<title>Life Extension 净销售看板(内部)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Zilla+Slab:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --bg-page:#f6f6f6;
+    --surface:#ffffff;
+    --surface-raise:#ffffff;
+    --text-primary:#1a1a1a;
+    --text-secondary:#444444;
+    --text-muted:#828282;
+    --border:#e7e7e7;
+    --baseline:#c5c5c5;
+    --brand-navy:#0e2d52;
+    --accent:#0b8290;
+    --accent-wash:#e6f6f7;
+    --g-tmall:#0e2d52;
+    --g-jd:#fa6100;
+    --g-douyin:#0b8290;
+    --g-red:#a41f35;
+    --g-vip:#6a86b8;
+    --g-pdd:#539800;
+    --g-b2b:#009dd5;
+    --trend-up:#539800;
+    --trend-down:#a41f35;
+    --font-display:"Zilla Slab",Georgia,serif;
+    --font-body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg-page:#101417;
+      --surface:#1a1f23;
+      --surface-raise:#20262a;
+      --text-primary:#f4f4f2;
+      --text-secondary:#c7c7c5;
+      --text-muted:#8d8d8b;
+      --border:#30363a;
+      --baseline:#3a4044;
+      --brand-navy:#5e86c4;
+      --accent:#3fc4d4;
+      --accent-wash:#14282c;
+      --g-tmall:#5e86c4;
+      --g-jd:#ff9a52;
+      --g-douyin:#3fc4d4;
+      --g-red:#e0657a;
+      --g-vip:#9db3dd;
+      --g-pdd:#8ec94a;
+      --g-b2b:#4fc1ea;
+      --trend-up:#8ec94a;
+      --trend-down:#e0657a;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg-page:#101417;
+    --surface:#1a1f23;
+    --surface-raise:#20262a;
+    --text-primary:#f4f4f2;
+    --text-secondary:#c7c7c5;
+    --text-muted:#8d8d8b;
+    --border:#30363a;
+    --baseline:#3a4044;
+    --brand-navy:#5e86c4;
+    --accent:#3fc4d4;
+    --accent-wash:#14282c;
+    --g-tmall:#5e86c4;
+    --g-jd:#ff9a52;
+    --g-douyin:#3fc4d4;
+    --g-red:#e0657a;
+    --g-vip:#9db3dd;
+    --g-pdd:#8ec94a;
+    --g-b2b:#4fc1ea;
+    --trend-up:#8ec94a;
+    --trend-down:#e0657a;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg-page);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    padding-inline:16px;
+    padding-block:24px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  header.top{margin-bottom:18px;}
+  .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .top-left{min-width:0;}
+  header.top .eyebrow{
+    font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:6px;
+  }
+  h1{font-family:var(--font-display);color:var(--brand-navy);font-size:1.7rem;margin:0 0 4px;font-weight:700;text-wrap:balance;}
+  .subtitle{color:var(--text-secondary);font-size:.92rem;margin:0;max-width:60ch;}
+  .demo-badge{
+    display:inline-block;margin-top:10px;font-size:.76rem;color:var(--text-muted);
+    border:1px solid var(--border);border-radius:6px;padding:4px 10px;
+  }
+  .empty-state{
+    margin:14px 0;padding:14px 16px;background:var(--accent-wash);border:1px solid var(--border);
+    border-radius:10px;color:var(--text-secondary);font-size:.88rem;
+  }
+
+  .filters{
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+    margin:18px 0 18px;padding:12px 14px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  }
+  .filters .group{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .filters .group[hidden]{display:none;}
+  .filters label{font-size:.76rem;color:var(--text-muted);margin-right:2px;}
+  .period-range{font-size:.84rem;color:var(--text-secondary);font-weight:600;}
+  .seg{
+    display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;
+    background:var(--surface-raise);flex:none;
+  }
+  .seg button{
+    font:inherit;font-size:.84rem;padding:6px 14px;border:none;background:transparent;
+    color:var(--text-secondary);cursor:pointer;border-right:1px solid var(--border);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button[aria-pressed="true"]{background:var(--brand-navy);color:#fff;font-weight:600;}
+  select, input[type="date"]{
+    font:inherit;font-size:.84rem;padding:6px 10px;border:1px solid var(--border);
+    border-radius:8px;background:var(--surface-raise);color:var(--text-primary);
+  }
+  .range-sep{color:var(--text-muted);font-size:.84rem;}
+
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  @media (max-width:640px){.tiles{grid-template-columns:1fr;}}
+  .tile{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;
+  }
+  .tile .k{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted);font-weight:600;}
+  .tile .v{font-size:1.5rem;font-weight:700;margin-top:4px;}
+  .tile .v.trend-up{color:var(--trend-up);}
+  .tile .v.trend-down{color:var(--trend-down);}
+  .tile .d{font-size:.78rem;color:var(--text-secondary);margin-top:2px;}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:18px 18px 14px;margin-bottom:20px;
+  }
+  .card h2{font-family:var(--font-display);color:var(--brand-navy);font-size:1.12rem;margin:0 0 2px;font-weight:700;}
+  .card .card-sub{font-size:.82rem;color:var(--text-secondary);margin:0 0 12px;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin:2px 0 14px;}
+  .legend .item{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-secondary);}
+  .legend .swatch{width:10px;height:10px;border-radius:2px;flex:none;}
+
+  .mix-wrap{display:flex;align-items:center;gap:30px;flex-wrap:wrap;}
+  .donut-scroll{flex:none;}
+  svg.donut{display:block;}
+  .mix-wrap .legend{margin:0;flex-direction:column;gap:7px;flex:0 1 auto;max-width:300px;min-width:220px;}
+  .mix-wrap .legend .item{
+    display:grid;grid-template-columns:10px 1fr auto auto;align-items:center;
+    gap:8px;font-size:.84rem;color:var(--text-secondary);width:100%;
+  }
+  .mix-wrap .legend .item .mix-label{color:var(--text-primary);}
+  .mix-wrap .legend .item .mix-value{
+    text-align:right;font-weight:600;color:var(--text-primary);
+    font-variant-numeric:tabular-nums;min-width:76px;
+  }
+  .mix-wrap .legend .item .mix-pct{
+    text-align:right;color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:42px;
+  }
+
+  .chart-controls{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    gap:10px;margin-bottom:10px;
+  }
+  .month-nav{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--text-secondary);}
+  .month-nav button{
+    border:1px solid var(--border);background:var(--surface-raise);border-radius:6px;
+    width:26px;height:26px;cursor:pointer;color:var(--text-primary);font-size:.9rem;line-height:1;
+  }
+  .month-nav button:disabled{opacity:.35;cursor:not-allowed;}
+  .month-nav span{min-width:84px;text-align:center;font-weight:600;color:var(--text-primary);}
+
+  .badge-progress{
+    display:inline-block;font-size:.64rem;font-weight:700;letter-spacing:.03em;color:#fff;
+    background:var(--brand-navy);border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:middle;
+  }
+
+  .chart-scroll{overflow-x:auto;}
+  svg.chart{display:block;font-family:inherit;}
+  .bar-seg{cursor:pointer;}
+  .axis-label{fill:var(--text-muted);font-size:10px;}
+  .axis-label-sub{fill:var(--text-muted);font-size:9px;opacity:.75;}
+  .grid-line{stroke:var(--border);stroke-width:1;}
+  .baseline{stroke:var(--baseline);stroke-width:1;}
+
+  #tooltip{
+    position:fixed;pointer-events:none;z-index:50;
+    background:var(--surface-raise);border:1px solid var(--border);border-radius:8px;
+    padding:8px 10px;font-size:.78rem;box-shadow:0 4px 14px rgba(0,0,0,.12);
+    max-width:220px;opacity:0;transition:opacity .08s;
+  }
+  #tooltip.show{opacity:1;}
+  #tooltip .tt-date{font-weight:700;margin-bottom:4px;color:var(--text-primary);}
+  #tooltip .tt-row{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:1px 0;}
+  #tooltip .tt-row .name{display:flex;align-items:center;gap:5px;color:var(--text-secondary);}
+  #tooltip .tt-row .dot{width:8px;height:8px;border-radius:2px;flex:none;}
+  #tooltip .tt-row .val{font-weight:700;font-variant-numeric:tabular-nums;color:var(--text-primary);}
+  #tooltip .tt-total{border-top:1px solid var(--border);margin-top:4px;padding-top:4px;font-weight:700;}
+
+  table.detail{width:100%;border-collapse:collapse;font-size:.8rem;table-layout:fixed;}
+  table.detail th, table.detail td{
+    padding:7px 9px;border-bottom:1px solid var(--border);text-align:right;
+    font-variant-numeric:tabular-nums;overflow:hidden;
+  }
+  table.detail td{white-space:nowrap;}
+  table.detail th{white-space:normal;word-break:break-word;line-height:1.25;vertical-align:bottom;}
+  table.detail th:first-child, table.detail td:first-child{
+    text-align:left;font-variant-numeric:normal;overflow:visible;
+  }
+  table.detail thead th{
+    color:var(--brand-navy);font-size:.7rem;text-transform:uppercase;letter-spacing:.02em;
+    font-weight:700;border-bottom:2px solid var(--brand-navy);background:var(--accent-wash);
+    padding:8px 4px;
+  }
+  table.detail tbody tr:nth-child(even){background:rgba(0,0,0,.015);}
+  table.detail tbody tr:hover{background:var(--accent-wash);}
+  table.detail tr.total-row td{font-weight:700;border-top:1px solid var(--border);background:var(--accent-wash);}
+  .table-scroll{overflow-x:auto;}
+
+  /* FY26 annual progress table */
+  .annual-table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:.86rem;}
+  .annual-table td{padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .annual-table td:first-child{text-align:left;font-variant-numeric:normal;white-space:normal;}
+  .annual-table tr.grp-header td{
+    background:var(--brand-navy);color:#fff;font-weight:700;font-size:.72rem;
+    text-transform:uppercase;letter-spacing:.02em;
+  }
+  .annual-table tr.grp-header td:first-child{border-radius:6px 0 0 6px;}
+  .annual-table tr.grp-header td:last-child{border-radius:0 6px 6px 0;}
+  .annual-table tr.grp-data td{font-weight:600;font-size:.98rem;color:var(--text-primary);border-bottom:1px solid var(--border);}
+  .annual-table tr.grp-data td:first-child{font-weight:700;color:var(--brand-navy);}
+
+  /* 运营模式明细 table */
+  table.ops-table{width:100%;border-collapse:collapse;font-size:.82rem;table-layout:fixed;}
+  table.ops-table th, table.ops-table td{
+    padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;
+    font-variant-numeric:tabular-nums;overflow:hidden;white-space:nowrap;
+  }
+  table.ops-table th:first-child, table.ops-table td:first-child{
+    text-align:left;font-variant-numeric:normal;overflow:visible;white-space:normal;
+  }
+  table.ops-table thead th{
+    color:var(--brand-navy);font-size:.68rem;text-transform:uppercase;letter-spacing:.02em;
+    font-weight:700;border-bottom:2px solid var(--brand-navy);background:var(--accent-wash);
+    padding:8px 6px;white-space:normal;line-height:1.25;
+  }
+  table.ops-table tbody tr.subtotal td{font-weight:700;background:rgba(0,0,0,.04);border-top:1px solid var(--border);}
+  table.ops-table tbody tr.grand-total td{font-weight:700;background:var(--brand-navy);color:#fff;border-bottom:none;}
+
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="top-row">
+      <div class="top-left">
+        <div class="eyebrow">Life Extension · 内部看板</div>
+        <h1>净销售看板</h1>
+        <p class="subtitle">净销售趋势与渠道拆解,仅供Pattern内部使用,请勿对外分享。数据按天更新,截至前一天。</p>
+        <span class="demo-badge" id="syncBadge">同步中…</span>
+      </div>
+      <div class="seg" id="currencySeg" role="group" aria-label="Currency">
+        <button data-c="CNY" aria-pressed="true">CNY ¥</button>
+        <button data-c="USD" aria-pressed="false">USD $</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="empty-state" id="emptyState" hidden>运营团队还没有开始填报数据,数据到位后本页会自动更新。</div>
+
+  <section class="card data-dependent" id="annualCard">
+    <h2>FY26 业绩进度</h2>
+    <p class="card-sub">净销售口径,按自然年(2026年1月1日起)累计;下方拆分B2B / B2C两个口径。</p>
+    <div class="table-scroll">
+      <table class="annual-table" id="annualTable"></table>
+    </div>
+  </section>
+
+  <section class="card data-dependent" id="opsCard">
+    <h2>运营模式明细</h2>
+    <p class="card-sub" id="opsSub">当前统计区间:—</p>
+    <div class="table-scroll">
+      <table class="ops-table" id="opsTable"></table>
+    </div>
+  </section>
+
+  <div class="filters data-dependent" id="topFilters">
+    <div class="group">
+      <label>统计周期</label>
+      <select id="presetSel">
+        <option value="yesterday">昨天</option>
+        <option value="lastWeek">上周</option>
+        <option value="mtd">本月至今</option>
+        <option value="lastMonth">上月</option>
+        <option value="ytd" selected>年初至今</option>
+        <option value="custom">自定义</option>
+      </select>
+      <span class="period-range" id="periodRangeLabel"></span>
+    </div>
+    <div class="group" id="customRange" hidden>
+      <input type="date" id="rangeStart">
+      <span class="range-sep">至</span>
+      <input type="date" id="rangeEnd">
+    </div>
+  </div>
+
+  <div class="tiles data-dependent" id="tilesRow">
+    <div class="tile">
+      <div class="k">净销售</div>
+      <div class="v" id="tileTotal">—</div>
+      <div class="d" id="tileTotalSub">—</div>
+    </div>
+    <div class="tile">
+      <div class="k">日均净销售</div>
+      <div class="v" id="tileAvg">—</div>
+      <div class="d">所选周期内的每日平均值</div>
+    </div>
+    <div class="tile">
+      <div class="k">环比上一周期</div>
+      <div class="v" id="tileCompareValue">—</div>
+      <div class="d" id="tileCompareSub">—</div>
+    </div>
+  </div>
+
+  <section class="card data-dependent" id="mixCard">
+    <h2>渠道占比</h2>
+    <p class="card-sub" id="mixSub">所选周期内,各渠道净销售占比。</p>
+    <div class="mix-wrap">
+      <div class="donut-scroll"><svg class="donut" id="donutSvg"></svg></div>
+      <div class="legend" id="mixLegend"></div>
+    </div>
+  </section>
+
+  <section class="card data-dependent" id="chartCard">
+    <h2>净销售趋势(按渠道)</h2>
+    <p class="card-sub">按日/周/月展示所选月份的堆叠柱状图,鼠标悬停查看渠道明细。</p>
+    <div class="chart-controls">
+      <div class="seg" id="chartGranSeg" role="group" aria-label="Chart granularity">
+        <button data-g="day" aria-pressed="true">日</button>
+        <button data-g="week" aria-pressed="false">周</button>
+        <button data-g="month" aria-pressed="false">月</button>
+      </div>
+      <div class="month-nav">
+        <button id="navPrev" aria-label="Previous">‹</button>
+        <span id="navLabel">—</span>
+        <button id="navNext" aria-label="Next">›</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chart-scroll">
+      <svg class="chart" id="chartSvg"></svg>
+    </div>
+  </section>
+
+  <section class="card data-dependent">
+    <h2>渠道明细</h2>
+    <p class="card-sub">所选月份每日净销售(按渠道),顶部为当月累计(MTD)。</p>
+    <div class="table-scroll">
+      <table class="detail" id="detailTable"></table>
+    </div>
+  </section>
+
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var USD_RATE = 7.2; // fixed CNY-per-USD rate (placeholder until a live rate is wired in)
+
+  var GROUPS = [
+    {key:"tmall", label:"Tmall", color:"var(--g-tmall)"},
+    {key:"jd", label:"JD", color:"var(--g-jd)"},
+    {key:"douyin", label:"Douyin", color:"var(--g-douyin)"},
+    {key:"red", label:"RED", color:"var(--g-red)"},
+    {key:"vip", label:"VIP", color:"var(--g-vip)"},
+    {key:"pdd", label:"PDD", color:"var(--g-pdd)"},
+    {key:"b2b", label:"Sub-dist. (B2B)", color:"var(--g-b2b)"}
+  ];
+
+  var SUBCHANNELS = [
+    {key:"tmall_flagship", label:"Tmall FSS", group:"tmall"},
+    {key:"tmall_alihealth", label:"AliHealth", group:"tmall"},
+    {key:"tmall_tdi", label:"TDI", group:"tmall"},
+    {key:"jd_self", label:"JD DS", group:"jd"},
+    {key:"jd_pop", label:"JD POP", group:"jd"},
+    {key:"douyin", label:"Douyin", group:"douyin"},
+    {key:"red", label:"RED", group:"red"},
+    {key:"vip", label:"VIP", group:"vip"},
+    {key:"pdd", label:"PDD", group:"pdd"},
+    {key:"b2b", label:"Sub-dist. (B2B)", group:"b2b"}
+  ];
+
+  // ---- real data, baked in at build time from the ops fill-in sheet ----
+  // BUILD_META and REAL_RECORDS are replaced by build_dashboard.py on every regeneration.
+  // REAL_RECORDS: [{date:"YYYY-MM-DD", tmall_flagship:N, tmall_alihealth:N, ...}, ...]
+  var BUILD_META = {"generatedAt":"__PENDING__","sourceNote":"__PENDING__"};
+  var REAL_RECORDS = [];
+  var REAL_TARGETS = {};
+
+  var records = REAL_RECORDS.map(function(r){
+    var rec = {date: parseDate(r.date)};
+    SUBCHANNELS.forEach(function(sc){ rec[sc.key] = r[sc.key] || 0; });
+    return rec;
+  });
+
+  var HAS_DATA = records.length > 0 && records.some(function(rec){
+    return SUBCHANNELS.some(function(sc){ return rec[sc.key] > 0; });
+  });
+
+  if (records.length === 0){
+    // nothing filled in yet - keep a single placeholder day (today) so date math below has an anchor
+    var rec0 = {date: new Date()};
+    SUBCHANNELS.forEach(function(sc){ rec0[sc.key] = 0; });
+    records.push(rec0);
+  }
+
+  var recordsByISO = {};
+  records.forEach(function(r){ recordsByISO[fmtDate(r.date)] = r; });
+
+  function groupValue(rec, groupKey){
+    var total = 0;
+    SUBCHANNELS.forEach(function(sc){ if (sc.group === groupKey) total += rec[sc.key]; });
+    return total;
+  }
+
+  function fmtDate(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function parseDate(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function fmtDateEn(d){ return MONTH_ABBR[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear(); }
+  function fmtShortDate(d){ return (d.getMonth()+1) + "/" + d.getDate(); }
+  function fmtRangeEn(a, b){
+    if (fmtDate(a) === fmtDate(b)) return fmtDateEn(a);
+    if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()){
+      return MONTH_ABBR[a.getMonth()] + " " + a.getDate() + "–" + b.getDate() + ", " + a.getFullYear();
+    }
+    return fmtDateEn(a) + " – " + fmtDateEn(b);
+  }
+  function daysInMonth(y, m){ return new Date(y, m+1, 0).getDate(); }
+  function today(){ var d = new Date(); d.setHours(0,0,0,0); return d; }
+  function mondayOfWeek(d){
+    var dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var day = (dt.getDay() + 6) % 7; // Mon=0
+    dt.setDate(dt.getDate() - day);
+    return dt;
+  }
+
+  // ================= CURRENCY =================
+  var currencyState = { code: "CNY" };
+  function currencySymbol(){ return currencyState.code === "USD" ? "$" : "¥"; }
+  function convertCurrency(n){ return currencyState.code === "USD" ? n / USD_RATE : n; }
+  function fmtMoney(n){ return currencySymbol() + Math.round(convertCurrency(n)).toLocaleString("en-US"); }
+  function fmtAxisMoney(n){
+    var v = convertCurrency(n);
+    if (Math.abs(v) >= 1000) return currencySymbol() + Math.round(v/1000) + "k";
+    return currencySymbol() + Math.round(v);
+  }
+
+  // ================= full-calendar helpers (never skip empty days) =================
+  function fullMonthRecords(y, m){
+    var lastDay = daysInMonth(y, m);
+    var t = today();
+    var cap = (y === t.getFullYear() && m === t.getMonth()) ? t.getDate() : lastDay;
+    var out = [];
+    for (var d = 1; d <= cap; d++){
+      var dt = new Date(y, m, d);
+      var rec = recordsByISO[fmtDate(dt)];
+      var row = {date: dt};
+      SUBCHANNELS.forEach(function(sc){ row[sc.key] = rec ? (rec[sc.key] || 0) : 0; });
+      out.push(row);
+    }
+    return out;
+  }
+  function fullYearRecords(y){
+    var t = today();
+    var firstRec = records[0].date;
+    var lastMonth = (y === t.getFullYear()) ? t.getMonth() : 11;
+    var startMonth = (y === firstRec.getFullYear()) ? firstRec.getMonth() : 0;
+    var out = [];
+    for (var m = startMonth; m <= lastMonth; m++){
+      out = out.concat(fullMonthRecords(y, m));
+    }
+    return out;
+  }
+
+  // ================= TOP PERIOD (tiles + channel mix) =================
+  var topState = { preset: "ytd", rangeStart: null, rangeEnd: null };
+
+  var PRESET_LABELS = {
+    yesterday: "昨天", lastWeek: "上周", mtd: "本月至今", lastMonth: "上月",
+    ytd: "年初至今", custom: "自定义区间"
+  };
+
+  function topRange(){
+    var t = today();
+    if (topState.preset === "custom" && topState.rangeStart && topState.rangeEnd){
+      return {start: topState.rangeStart, end: topState.rangeEnd};
+    }
+    if (topState.preset === "yesterday"){
+      var y = new Date(t); y.setDate(y.getDate()-1);
+      return {start: y, end: y};
+    }
+    if (topState.preset === "lastWeek"){
+      var thisMonday = mondayOfWeek(t);
+      var lwStart = new Date(thisMonday); lwStart.setDate(lwStart.getDate()-7);
+      var lwEnd = new Date(thisMonday); lwEnd.setDate(lwEnd.getDate()-1);
+      return {start: lwStart, end: lwEnd};
+    }
+    if (topState.preset === "lastMonth"){
+      var lmEnd = new Date(t.getFullYear(), t.getMonth(), 0);
+      var lmStart = new Date(lmEnd.getFullYear(), lmEnd.getMonth(), 1);
+      return {start: lmStart, end: lmEnd};
+    }
+    if (topState.preset === "ytd"){
+      return {start: new Date(t.getFullYear(), 0, 1), end: t};
+    }
+    // mtd
+    return {start: new Date(t.getFullYear(), t.getMonth(), 1), end: t};
+  }
+
+  // calendar-aware "previous period" for the vs. Previous Period tile
+  function prevRangeFor(preset, range){
+    var s = range.start, e = range.end;
+    if (preset === "yesterday"){
+      var ps = new Date(s); ps.setDate(ps.getDate()-1);
+      return {start: ps, end: ps};
+    }
+    if (preset === "lastWeek"){
+      var ps2 = new Date(s); ps2.setDate(ps2.getDate()-7);
+      var pe2 = new Date(e); pe2.setDate(pe2.getDate()-7);
+      return {start: ps2, end: pe2};
+    }
+    if (preset === "mtd"){
+      var prevMonthLast = new Date(s.getFullYear(), s.getMonth(), 0);
+      var dayCount = e.getDate();
+      var ps3 = new Date(prevMonthLast.getFullYear(), prevMonthLast.getMonth(), 1);
+      var pe3 = new Date(prevMonthLast.getFullYear(), prevMonthLast.getMonth(), Math.min(dayCount, prevMonthLast.getDate()));
+      return {start: ps3, end: pe3};
+    }
+    if (preset === "lastMonth"){
+      var ps4 = new Date(s.getFullYear(), s.getMonth()-1, 1);
+      var pe4 = new Date(s.getFullYear(), s.getMonth(), 0);
+      return {start: ps4, end: pe4};
+    }
+    if (preset === "ytd"){
+      var ps5 = new Date(s.getFullYear()-1, s.getMonth(), s.getDate());
+      var pe5 = new Date(e.getFullYear()-1, e.getMonth(), e.getDate());
+      return {start: ps5, end: pe5};
+    }
+    // custom: immediately preceding period of equal length
+    var lengthDays = Math.round((e - s) / 86400000) + 1;
+    var pe6 = new Date(s); pe6.setDate(pe6.getDate()-1);
+    var ps6 = new Date(pe6); ps6.setDate(ps6.getDate()-(lengthDays-1));
+    return {start: ps6, end: pe6};
+  }
+
+  function recordsInRange(start, end){
+    return records.filter(function(r){ return r.date >= start && r.date <= end; });
+  }
+  function sumRange(start, end){
+    var recs = recordsInRange(start, end);
+    var total = 0;
+    recs.forEach(function(rec){ GROUPS.forEach(function(g){ total += groupValue(rec, g.key); }); });
+    return total;
+  }
+
+  function renderTiles(){
+    var r = topRange();
+    var recs = recordsInRange(r.start, r.end);
+    var grand = 0;
+    recs.forEach(function(rec){ GROUPS.forEach(function(g){ grand += groupValue(rec, g.key); }); });
+    document.getElementById("tileTotal").textContent = fmtMoney(grand);
+    document.getElementById("tileTotalSub").textContent = fmtRangeEn(r.start, r.end);
+    document.getElementById("periodRangeLabel").textContent = fmtRangeEn(r.start, r.end);
+    var days = Math.round((r.end - r.start) / 86400000) + 1;
+    document.getElementById("tileAvg").textContent = fmtMoney(grand / Math.max(days, 1));
+
+    var pr = prevRangeFor(topState.preset, r);
+    var prevTotal = sumRange(pr.start, pr.end);
+    var valueEl = document.getElementById("tileCompareValue");
+    var subEl = document.getElementById("tileCompareSub");
+    if (prevTotal > 0){
+      var pct = (grand - prevTotal) / prevTotal * 100;
+      var sign = pct > 0 ? "+" : "";
+      valueEl.textContent = sign + pct.toFixed(1) + "%";
+      valueEl.className = "v" + (pct > 0 ? " trend-up" : pct < 0 ? " trend-down" : "");
+    } else {
+      valueEl.textContent = "—";
+      valueEl.className = "v";
+    }
+    subEl.textContent = "对比 " + fmtRangeEn(pr.start, pr.end);
+  }
+
+  var svgNS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs){
+    var el = document.createElementNS(svgNS, tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function renderMix(){
+    var r = topRange();
+    var recs = recordsInRange(r.start, r.end);
+    var totals = {}; GROUPS.forEach(function(g){ totals[g.key] = 0; });
+    var grand = 0;
+    recs.forEach(function(rec){
+      GROUPS.forEach(function(g){ var v = groupValue(rec, g.key); totals[g.key] += v; grand += v; });
+    });
+
+    document.getElementById("mixSub").textContent =
+      "各渠道净销售占比 — " + (PRESET_LABELS[topState.preset] || "") + "。";
+
+    var svg = document.getElementById("donutSvg");
+    svg.innerHTML = "";
+    var size = 180, cx = 90, cy = 90, rad = 64, sw = 28;
+    svg.setAttribute("viewBox", "0 0 " + size + " " + size);
+    svg.setAttribute("width", size);
+    svg.setAttribute("height", size);
+    var circumference = 2 * Math.PI * rad;
+
+    var sorted = GROUPS.map(function(g){ return {g: g, v: totals[g.key]}; })
+      .sort(function(a, b){ return b.v - a.v; });
+
+    if (grand <= 0){
+      svg.appendChild(svgEl("circle", {
+        cx: cx, cy: cy, r: rad, fill: "none", style: "stroke:var(--border);stroke-width:" + sw
+      }));
+    } else {
+      var cumulative = 0;
+      sorted.forEach(function(item){
+        if (item.v <= 0) return;
+        var frac = item.v / grand;
+        var dash = frac * circumference;
+        svg.appendChild(svgEl("circle", {
+          cx: cx, cy: cy, r: rad, fill: "none",
+          style: "stroke:" + item.g.color + ";stroke-width:" + sw,
+          "stroke-dasharray": dash + " " + (circumference - dash),
+          "stroke-dashoffset": -cumulative,
+          transform: "rotate(-90 " + cx + " " + cy + ")"
+        }));
+        cumulative += dash;
+      });
+    }
+
+    var legendEl = document.getElementById("mixLegend");
+    legendEl.innerHTML = "";
+    sorted.forEach(function(item){
+      var pct = grand > 0 ? (item.v / grand * 100).toFixed(1) : "0.0";
+      var row = document.createElement("span");
+      row.className = "item";
+      var sw2 = document.createElement("span");
+      sw2.className = "swatch";
+      sw2.style.background = item.g.color;
+      row.appendChild(sw2);
+      var label = document.createElement("span");
+      label.className = "mix-label";
+      label.textContent = item.g.label;
+      row.appendChild(label);
+      var val = document.createElement("span");
+      val.className = "mix-value";
+      val.textContent = fmtMoney(item.v);
+      row.appendChild(val);
+      var pctEl = document.createElement("span");
+      pctEl.className = "mix-pct";
+      pctEl.textContent = pct + "%";
+      row.appendChild(pctEl);
+      legendEl.appendChild(row);
+    });
+  }
+
+  function renderTop(){
+    renderTiles();
+    renderMix();
+  }
+
+  // ================= CHART + DETAIL TABLE (month-anchored) =================
+  var lastDate = records[records.length - 1].date;
+  var chartState = {
+    granularity: "day",
+    anchor: new Date(lastDate.getFullYear(), lastDate.getMonth(), 1)
+  };
+
+  function isoWeekKey(d){
+    var dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var day = (dt.getDay() + 6) % 7; // Mon=0
+    dt.setDate(dt.getDate() - day);
+    return dt.getFullYear() + "-W" + fmtDate(dt);
+  }
+  function monthKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
+
+  function chartRangeRecords(){
+    if (chartState.granularity === "month"){
+      return fullYearRecords(chartState.anchor.getFullYear());
+    }
+    return fullMonthRecords(chartState.anchor.getFullYear(), chartState.anchor.getMonth());
+  }
+
+  function bucketData(recs, gran){
+    if (gran === "day"){
+      return recs.map(function(rec){
+        return {label: String(rec.date.getDate()), sub: rec, dateRange: fmtDateEn(rec.date)};
+      });
+    }
+    var keyFn = gran === "week" ? isoWeekKey : monthKey;
+    var order = [], map = {};
+    recs.forEach(function(rec){
+      var k = keyFn(rec.date);
+      if (!map[k]){ map[k] = {sub:{date:rec.date}, first:rec.date, last:rec.date}; order.push(k); }
+      var bucket = map[k];
+      if (rec.date < bucket.first) bucket.first = rec.date;
+      if (rec.date > bucket.last) bucket.last = rec.date;
+      SUBCHANNELS.forEach(function(sc){ bucket.sub[sc.key] = (bucket.sub[sc.key]||0) + rec[sc.key]; });
+    });
+    return order.map(function(k, idx){
+      var b = map[k];
+      if (gran === "week"){
+        var shortRange = fmtShortDate(b.first) + "–" + fmtShortDate(b.last);
+        return {
+          label: "Week " + (idx + 1),
+          subLabel: shortRange,
+          sub: b.sub,
+          dateRange: "Week " + (idx + 1) + " · " + fmtDateEn(b.first) + " – " + fmtDateEn(b.last)
+        };
+      }
+      return {
+        label: MONTH_ABBR[b.first.getMonth()],
+        sub: b.sub,
+        dateRange: MONTH_ABBR[b.first.getMonth()] + " " + b.first.getFullYear()
+      };
+    });
+  }
+
+  function niceMax(v){
+    if (v <= 0) return 100;
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var norm = v / mag;
+    var step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+    return step * mag;
+  }
+
+  function renderLegend(){
+    var el = document.getElementById("legend");
+    el.innerHTML = "";
+    GROUPS.forEach(function(g){
+      var item = document.createElement("span");
+      item.className = "item";
+      var sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = g.color;
+      item.appendChild(sw);
+      var txt = document.createElement("span");
+      txt.textContent = g.label;
+      item.appendChild(txt);
+      el.appendChild(item);
+    });
+  }
+
+  var tooltip = document.getElementById("tooltip");
+
+  function showTooltip(evt, bucket, groupHighlight){
+    var total = 0;
+    var rows = GROUPS.map(function(g){
+      var v = groupValue(bucket.sub, g.key);
+      total += v;
+      return {g:g, v:v};
+    });
+    tooltip.innerHTML = "";
+    var dateEl = document.createElement("div");
+    dateEl.className = "tt-date";
+    dateEl.textContent = bucket.dateRange;
+    tooltip.appendChild(dateEl);
+    rows.forEach(function(r){
+      var row = document.createElement("div");
+      row.className = "tt-row";
+      var nameWrap = document.createElement("span");
+      nameWrap.className = "name";
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = r.g.color;
+      nameWrap.appendChild(dot);
+      var nameTxt = document.createElement("span");
+      nameTxt.textContent = r.g.label;
+      nameWrap.appendChild(nameTxt);
+      row.appendChild(nameWrap);
+      var val = document.createElement("span");
+      val.className = "val";
+      val.textContent = fmtMoney(r.v);
+      row.appendChild(val);
+      if (groupHighlight && groupHighlight !== r.g.key) row.style.opacity = "0.45";
+      tooltip.appendChild(row);
+    });
+    var totalRow = document.createElement("div");
+    totalRow.className = "tt-row tt-total";
+    var totalLabel = document.createElement("span");
+    totalLabel.textContent = "合计";
+    totalRow.appendChild(totalLabel);
+    var totalVal = document.createElement("span");
+    totalVal.className = "val";
+    totalVal.textContent = fmtMoney(total);
+    totalRow.appendChild(totalVal);
+    tooltip.appendChild(totalRow);
+
+    tooltip.classList.add("show");
+    positionTooltip(evt);
+  }
+  function positionTooltip(evt){
+    var pad = 14;
+    var x = evt.clientX + pad, y = evt.clientY + pad;
+    var tw = tooltip.offsetWidth || 200, th = tooltip.offsetHeight || 80;
+    if (x + tw > window.innerWidth - 8) x = evt.clientX - tw - pad;
+    if (y + th > window.innerHeight - 8) y = evt.clientY - th - pad;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  }
+  function hideTooltip(){ tooltip.classList.remove("show"); }
+
+  function renderChart(){
+    var buckets = bucketData(chartRangeRecords(), chartState.granularity);
+    var svg = document.getElementById("chartSvg");
+    svg.innerHTML = "";
+
+    var scrollEl = svg.parentElement;
+    var containerW = (scrollEl && scrollEl.clientWidth) || 900;
+    var isWeek = chartState.granularity === "week";
+    var marginLeft = 56, marginBottom = isWeek ? 38 : 26, marginTop = 10;
+    var n = buckets.length;
+    var availableW = Math.max(containerW - marginLeft - 12, 200);
+
+    var barW, gap;
+    if (chartState.granularity === "day"){
+      barW = 18; gap = 10;
+    } else {
+      // week / month views: stretch bars to fill the full card width instead of
+      // bunching at the left when there are only a handful of bars to show.
+      gap = Math.max(16, Math.min(44, Math.floor(availableW / Math.max(n, 1) * 0.22)));
+      barW = Math.max(40, Math.min(220, Math.floor((availableW - gap * (n + 1)) / Math.max(n, 1))));
+    }
+    var plotW = Math.max(availableW, n * (barW + gap) + gap);
+    var plotH = 260;
+    var totalW = plotW + marginLeft + 12;
+    var totalH = plotH + marginTop + marginBottom;
+    svg.setAttribute("width", totalW);
+    svg.setAttribute("height", totalH);
+    svg.setAttribute("viewBox", "0 0 " + totalW + " " + totalH);
+
+    var maxTotal = 0;
+    buckets.forEach(function(b){
+      var t = 0;
+      GROUPS.forEach(function(g){ t += groupValue(b.sub, g.key); });
+      if (t > maxTotal) maxTotal = t;
+    });
+    var axisMax = niceMax(maxTotal * 1.08);
+    var ticks = 4;
+
+    for (var t2 = 0; t2 <= ticks; t2++){
+      var val = axisMax * t2 / ticks;
+      var y = marginTop + plotH - (plotH * t2 / ticks);
+      svg.appendChild(svgEl("line", {
+        x1: marginLeft, x2: marginLeft + plotW, y1: y, y2: y,
+        class: t2 === 0 ? "baseline" : "grid-line"
+      }));
+      var label = svgEl("text", {x: marginLeft - 8, y: y + 3, "text-anchor": "end", class: "axis-label"});
+      label.textContent = val === 0 ? "0" : fmtAxisMoney(val);
+      svg.appendChild(label);
+    }
+
+    if (buckets.length === 0){
+      var msg = svgEl("text", {x: marginLeft + plotW/2, y: marginTop + plotH/2, "text-anchor": "middle", class: "axis-label"});
+      msg.textContent = "所选周期内没有数据";
+      svg.appendChild(msg);
+    }
+
+    buckets.forEach(function(b, i){
+      var x = marginLeft + gap + i * (barW + gap);
+      var yCursor = marginTop + plotH;
+      GROUPS.forEach(function(g){
+        var v = groupValue(b.sub, g.key);
+        if (v <= 0) return;
+        var h = (v / axisMax) * plotH;
+        var yTop = yCursor - h;
+        var rect = svgEl("rect", {
+          x: x, y: yTop, width: barW, height: Math.max(h - 2, 0),
+          rx: 3, style: "fill:" + g.color, class: "bar-seg"
+        });
+        rect.addEventListener("pointerenter", function(evt){ showTooltip(evt, b, g.key); });
+        rect.addEventListener("pointermove", positionTooltip);
+        rect.addEventListener("pointerleave", hideTooltip);
+        svg.appendChild(rect);
+        yCursor = yTop;
+      });
+      var xl = svgEl("text", {x: x + barW/2, y: marginTop + plotH + 16, "text-anchor": "middle", class: "axis-label"});
+      xl.textContent = b.label;
+      svg.appendChild(xl);
+      if (isWeek && b.subLabel){
+        var xl2 = svgEl("text", {x: x + barW/2, y: marginTop + plotH + 29, "text-anchor": "middle", class: "axis-label-sub"});
+        xl2.textContent = b.subLabel;
+        svg.appendChild(xl2);
+      }
+    });
+  }
+
+  function updateNavLabel(){
+    var lbl = document.getElementById("navLabel");
+    if (chartState.granularity === "month"){
+      lbl.textContent = String(chartState.anchor.getFullYear());
+    } else {
+      lbl.textContent = MONTH_ABBR[chartState.anchor.getMonth()] + " " + chartState.anchor.getFullYear();
+    }
+    var t = today();
+    var atLatest;
+    if (chartState.granularity === "month"){
+      atLatest = chartState.anchor.getFullYear() >= t.getFullYear();
+    } else {
+      atLatest = (chartState.anchor.getFullYear() > t.getFullYear()) ||
+        (chartState.anchor.getFullYear() === t.getFullYear() && chartState.anchor.getMonth() >= t.getMonth());
+    }
+    document.getElementById("navNext").disabled = atLatest;
+  }
+
+  function renderTable(){
+    var y = chartState.anchor.getFullYear(), m = chartState.anchor.getMonth();
+    var t = today();
+    var dayRows = fullMonthRecords(y, m);
+
+    var monthTotals = {}; SUBCHANNELS.forEach(function(sc){ monthTotals[sc.key] = 0; });
+    dayRows.forEach(function(row){ SUBCHANNELS.forEach(function(sc){ monthTotals[sc.key] += row[sc.key]; }); });
+    var monthGrand = 0; SUBCHANNELS.forEach(function(sc){ monthGrand += monthTotals[sc.key]; });
+
+    var table = document.getElementById("detailTable");
+    table.innerHTML = "";
+
+    // Date and Total get proportionally wider columns; every channel column
+    // shares the remaining width equally (so headers like "Sub-dist. (B2B)"
+    // wrap onto two lines rather than stretching their column).
+    var colgroup = document.createElement("colgroup");
+    var DATE_COL_PCT = 15, TOTAL_COL_PCT = 10;
+    var chColPct = (100 - DATE_COL_PCT - TOTAL_COL_PCT) / SUBCHANNELS.length;
+    function addCol(pct){
+      var col = document.createElement("col");
+      col.style.width = pct + "%";
+      colgroup.appendChild(col);
+    }
+    addCol(DATE_COL_PCT);
+    SUBCHANNELS.forEach(function(){ addCol(chColPct); });
+    addCol(TOTAL_COL_PCT);
+    table.appendChild(colgroup);
+
+    var thead = document.createElement("thead");
+    var htr = document.createElement("tr");
+    var headers = ["日期"].concat(SUBCHANNELS.map(function(sc){ return sc.label; })).concat(["合计"]);
+    headers.forEach(function(h){
+      var th = document.createElement("th");
+      th.textContent = h;
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+
+    var trM = document.createElement("tr");
+    trM.className = "total-row";
+    var tdM0 = document.createElement("td");
+    tdM0.textContent = "当月累计";
+    tdM0.style.textAlign = "left";
+    trM.appendChild(tdM0);
+    SUBCHANNELS.forEach(function(sc){
+      var td = document.createElement("td");
+      td.textContent = fmtMoney(monthTotals[sc.key]);
+      trM.appendChild(td);
+    });
+    var tdMT = document.createElement("td");
+    tdMT.textContent = fmtMoney(monthGrand);
+    trM.appendChild(tdMT);
+    tbody.appendChild(trM);
+
+    dayRows.slice().reverse().forEach(function(row){
+      var tr = document.createElement("tr");
+      var td0 = document.createElement("td");
+      td0.style.textAlign = "left";
+      td0.textContent = MONTH_ABBR[row.date.getMonth()] + " " + row.date.getDate();
+      if (fmtDate(row.date) === fmtDate(t)){
+        var badge = document.createElement("span");
+        badge.className = "badge-progress";
+        badge.textContent = "进行中";
+        td0.appendChild(badge);
+      }
+      tr.appendChild(td0);
+      var rowTotal = 0;
+      SUBCHANNELS.forEach(function(sc){
+        var td = document.createElement("td");
+        td.textContent = fmtMoney(row[sc.key]);
+        rowTotal += row[sc.key];
+        tr.appendChild(td);
+      });
+      var tdT = document.createElement("td");
+      tdT.textContent = fmtMoney(rowTotal);
+      tr.appendChild(tdT);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+  }
+
+  function renderChartSection(){
+    updateNavLabel();
+    renderChart();
+    renderTable();
+  }
+
+  // ---- FY26 annual progress + 运营模式明细 (target data, computed server-side
+  // at build time by build_netsales_dashboard.py and injected as REAL_TARGETS;
+  // not period/filter-dependent, only currency-toggle-dependent) ----
+  function fmtPct(r){ return (r === null || r === undefined) ? "—" : (r * 100).toFixed(1) + "%"; }
+  function fmtMoneySigned(n){
+    if (n === null || n === undefined) return "—";
+    var sign = n < 0 ? "-" : "";
+    return sign + currencySymbol() + Math.round(Math.abs(convertCurrency(n))).toLocaleString("en-US");
+  }
+
+  function renderAnnualTable(){
+    var table = document.getElementById("annualTable");
+    table.innerHTML = "";
+    var annual = REAL_TARGETS.annual || {};
+    var groups = [
+      {key:"total", label:"FY26 业绩进度", sub:"全年净销售目标"},
+      {key:"b2b", label:"B2B", sub:"年度目标"},
+      {key:"b2c", label:"B2C", sub:"年度目标"}
+    ];
+    groups.forEach(function(g){
+      var data = annual[g.key] || {target:0, ytd:0, remaining:0, rate:null};
+      var headTr = document.createElement("tr");
+      headTr.className = "grp-header";
+      [g.label, g.sub, "YTD", "剩余目标", "目标完成率"].forEach(function(txt){
+        var td = document.createElement("td");
+        td.textContent = txt;
+        headTr.appendChild(td);
+      });
+      table.appendChild(headTr);
+
+      var dataTr = document.createElement("tr");
+      dataTr.className = "grp-data";
+      [ "", fmtMoneySigned(data.target), fmtMoneySigned(data.ytd), fmtMoneySigned(data.remaining), fmtPct(data.rate) ].forEach(function(txt){
+        var td = document.createElement("td");
+        td.textContent = txt;
+        dataTr.appendChild(td);
+      });
+      table.appendChild(dataTr);
+    });
+  }
+
+  function renderOpsTable(){
+    var table = document.getElementById("opsTable");
+    var sub = document.getElementById("opsSub");
+    table.innerHTML = "";
+    var cp = REAL_TARGETS.current_period;
+    if (!cp){
+      sub.textContent = "当前日期没有对应的目标区间,请检查目标sheet是否已添加本月的目标区块。";
+      return;
+    }
+    sub.textContent = "当前统计区间:" + cp.label + "(至 " + cp.end_date + ")";
+
+    var thead = document.createElement("thead");
+    var htr = document.createElement("tr");
+    ["渠道", "当日净销售", cp.label + "净销售目标", "MTD", "剩余目标", "目标完成率", "月目标每日任需完成目标"].forEach(function(h){
+      var th = document.createElement("th");
+      th.textContent = h;
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    function addRow(label, r, cls){
+      var tr = document.createElement("tr");
+      if (cls) tr.className = cls;
+      [label, fmtMoneySigned(r.today), fmtMoneySigned(r.target), fmtMoneySigned(r.mtd),
+       fmtMoneySigned(r.remaining), fmtPct(r.rate), fmtMoneySigned(r.pace)].forEach(function(txt){
+        var td = document.createElement("td");
+        td.textContent = txt;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    cp.rows.filter(function(r){ return r.biz === "b2c"; }).forEach(function(r){ addRow(r.label, r); });
+    addRow("B2C 小计", cp.subtotals.b2c, "subtotal");
+    cp.rows.filter(function(r){ return r.biz === "b2b"; }).forEach(function(r){ addRow(r.label, r); });
+    addRow("B2B 小计", cp.subtotals.b2b, "subtotal");
+    addRow("总计", cp.subtotals.total, "grand-total");
+
+    table.appendChild(tbody);
+  }
+
+  function renderAll(){
+    renderTop();
+    renderChartSection();
+    renderAnnualTable();
+    renderOpsTable();
+  }
+
+  // ---- wiring ----
+  var presetSel = document.getElementById("presetSel");
+  var customRange = document.getElementById("customRange");
+  var rangeStartInput = document.getElementById("rangeStart");
+  var rangeEndInput = document.getElementById("rangeEnd");
+  rangeEndInput.value = fmtDate(today());
+  var defaultStart = new Date(today()); defaultStart.setDate(defaultStart.getDate()-29);
+  rangeStartInput.value = fmtDate(defaultStart);
+
+  presetSel.addEventListener("change", function(){
+    topState.preset = presetSel.value;
+    customRange.hidden = topState.preset !== "custom";
+    if (topState.preset === "custom"){
+      topState.rangeStart = parseDate(rangeStartInput.value);
+      topState.rangeEnd = parseDate(rangeEndInput.value);
+    }
+    renderTop();
+  });
+  [rangeStartInput, rangeEndInput].forEach(function(inp){
+    inp.addEventListener("change", function(){
+      if (topState.preset !== "custom") return;
+      topState.rangeStart = parseDate(rangeStartInput.value);
+      topState.rangeEnd = parseDate(rangeEndInput.value);
+      renderTop();
+    });
+  });
+
+  document.getElementById("chartGranSeg").addEventListener("click", function(evt){
+    var btn = evt.target.closest("button");
+    if (!btn) return;
+    Array.prototype.forEach.call(this.querySelectorAll("button"), function(b){ b.setAttribute("aria-pressed", "false"); });
+    btn.setAttribute("aria-pressed", "true");
+    chartState.granularity = btn.getAttribute("data-g");
+    renderChartSection();
+  });
+  document.getElementById("navPrev").addEventListener("click", function(){
+    if (chartState.granularity === "month") chartState.anchor.setFullYear(chartState.anchor.getFullYear()-1);
+    else chartState.anchor.setMonth(chartState.anchor.getMonth()-1);
+    renderChartSection();
+  });
+  document.getElementById("navNext").addEventListener("click", function(){
+    if (this.disabled) return;
+    if (chartState.granularity === "month") chartState.anchor.setFullYear(chartState.anchor.getFullYear()+1);
+    else chartState.anchor.setMonth(chartState.anchor.getMonth()+1);
+    renderChartSection();
+  });
+
+  document.getElementById("currencySeg").addEventListener("click", function(evt){
+    var btn = evt.target.closest("button");
+    if (!btn) return;
+    Array.prototype.forEach.call(this.querySelectorAll("button"), function(b){ b.setAttribute("aria-pressed", "false"); });
+    btn.setAttribute("aria-pressed", "true");
+    currencyState.code = btn.getAttribute("data-c");
+    renderAll();
+  });
+
+  document.getElementById("syncBadge").textContent = "上次更新:" + (BUILD_META.generatedAt || "—");
+  document.getElementById("emptyState").hidden = HAS_DATA;
+  document.querySelectorAll(".data-dependent").forEach(function(el){
+    el.style.display = HAS_DATA ? "" : "none";
+  });
+
+  renderLegend();
+  renderAll();
+})();
+</script>
