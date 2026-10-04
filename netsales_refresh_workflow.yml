@@ -1,0 +1,46 @@
+name: Refresh internal net sales dashboard
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour, on the hour (UTC)
+  workflow_dispatch: {}    # lets you click "Run workflow" manually to test
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Build dashboard.html from the latest ops sheet
+        env:
+          ONEDRIVE_URL: ${{ secrets.ONEDRIVE_URL }}
+        run: |
+          mkdir -p site
+          python3 scripts/build_netsales_dashboard.py scripts/netsales_template.html site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
