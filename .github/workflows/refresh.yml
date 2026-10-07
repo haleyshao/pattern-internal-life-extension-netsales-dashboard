@@ -2,7 +2,9 @@ name: Refresh internal net sales dashboard
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour, on the hour (UTC)
+    # GitHub cron runs in UTC. Beijing time = UTC+8:
+    - cron: "30 2 * * *"   # 10:30 Beijing time
+    - cron: "0 10 * * *"   # 18:00 Beijing time
   workflow_dispatch: {}    # lets you click "Run workflow" manually to test
 
 permissions:
