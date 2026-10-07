@@ -25,8 +25,10 @@
     --g-b2b:#009dd5;
     --trend-up:#539800;
     --trend-down:#a41f35;
-    --font-display:"Zilla Slab",Georgia,serif;
-    --font-body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+    /* Latin letters + digits: Roboto (headings: Zilla Slab). Chinese glyphs are not in
+       those fonts, so they fall through to 微软雅黑 (then PingFang on Mac). */
+    --font-display:"Zilla Slab","Microsoft YaHei","微软雅黑","PingFang SC","Noto Sans SC",sans-serif;
+    --font-body:"Roboto","Microsoft YaHei","微软雅黑","PingFang SC","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -95,7 +97,7 @@
     color:var(--accent);font-weight:700;margin-bottom:6px;
   }
   h1{font-family:var(--font-display);color:var(--brand-navy);font-size:1.7rem;margin:0 0 4px;font-weight:700;text-wrap:balance;}
-  .subtitle{color:var(--text-secondary);font-size:.92rem;margin:0;max-width:60ch;}
+  .subtitle{color:var(--text-secondary);font-size:.92rem;margin:0;max-width:90ch;}
   .demo-badge{
     display:inline-block;margin-top:10px;font-size:.76rem;color:var(--text-muted);
     border:1px solid var(--border);border-radius:6px;padding:4px 10px;
@@ -229,35 +231,81 @@
   table.detail tr.total-row td{font-weight:700;border-top:1px solid var(--border);background:var(--accent-wash);}
   .table-scroll{overflow-x:auto;}
 
-  /* FY26 annual progress table */
-  .annual-table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:.86rem;}
-  .annual-table td{padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .annual-table td:first-child{text-align:left;font-variant-numeric:normal;white-space:normal;}
-  .annual-table tr.grp-header td{
-    background:var(--brand-navy);color:#fff;font-weight:700;font-size:.72rem;
-    text-transform:uppercase;letter-spacing:.02em;
+  /* ===== two clearly separated modules ===== */
+  .module{border-radius:14px;overflow:hidden;margin-bottom:30px;border:1px solid var(--border);background:var(--surface);}
+  .module-bar{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:11px 18px;color:#fff;
   }
-  .annual-table tr.grp-header td:first-child{border-radius:6px 0 0 6px;}
-  .annual-table tr.grp-header td:last-child{border-radius:0 6px 6px 0;}
-  .annual-table tr.grp-data td{font-weight:600;font-size:.98rem;color:var(--text-primary);border-bottom:1px solid var(--border);}
-  .annual-table tr.grp-data td:first-child{font-weight:700;color:var(--brand-navy);}
+  .module-bar .mod-title{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  .module-bar h2{font-family:var(--font-display);margin:0;font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:.02em;}
+  .module-bar .mod-sub{font-size:.76rem;opacity:.85;}
+  .module-daily{border:2px solid var(--brand-navy);}
+  .module-daily .module-bar{background:var(--brand-navy);}
+  .module-board .module-bar{background:var(--accent);}
+  .module-board{background:#ececec;border-color:#d9d9d9;}
+  .module-body{padding:16px 18px 18px;}
+  .module-board .module-body{padding-bottom:2px;}
+  .module-board .module-body > :last-child{margin-bottom:18px;}
+  .module-board .filters{margin-top:0;}
+  .date-pick{display:flex;align-items:center;gap:6px;}
+  .date-pick label{font-size:.8rem;opacity:.9;}
+  .date-pick input[type="date"]{border-color:transparent;padding:5px 8px;}
+  .date-pick button{
+    font:inherit;font-size:.8rem;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;
+    border-radius:8px;padding:5px 10px;cursor:pointer;
+  }
+  .date-pick button:hover:not(:disabled){background:rgba(255,255,255,.18);}
+  .date-pick button:disabled{opacity:.35;cursor:not-allowed;}
+  .date-pick button.sq{width:28px;padding:5px 0;}
 
-  /* 运营模式明细 table */
-  table.ops-table{width:100%;border-collapse:collapse;font-size:.82rem;table-layout:fixed;}
-  table.ops-table th, table.ops-table td{
-    padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;
-    font-variant-numeric:tabular-nums;overflow:hidden;white-space:nowrap;
+  /* ===== 日报 report (designed to be screenshotted as one block) ===== */
+  .report{background:var(--surface);}
+  .rp-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .rp-head .rp-k{font-size:.8rem;color:var(--text-muted);margin-right:6px;}
+  .rp-head .rp-date{font-size:1.3rem;font-weight:700;color:var(--brand-navy);font-variant-numeric:tabular-nums;}
+  .rp-head .rp-wd{font-size:.9rem;color:var(--text-secondary);margin-left:6px;}
+  .rp-meta{font-size:.76rem;color:var(--text-muted);text-align:right;}
+  .rp-sec{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px;}
+  .rp-sec b{font-family:var(--font-display);color:var(--brand-navy);font-size:1rem;}
+  .rp-sec span{font-size:.76rem;color:var(--text-muted);}
+
+  table.rp-annual, table.rp-ops{width:100%;border-collapse:collapse;table-layout:fixed;font-variant-numeric:tabular-nums;}
+  table.rp-annual{font-size:.88rem;}
+  table.rp-annual th{
+    background:var(--accent-wash);color:var(--brand-navy);font-size:.72rem;font-weight:700;
+    padding:6px 10px;text-align:right;border-bottom:2px solid var(--brand-navy);
   }
-  table.ops-table th:first-child, table.ops-table td:first-child{
-    text-align:left;font-variant-numeric:normal;overflow:visible;white-space:normal;
+  table.rp-annual td{padding:0 10px;height:32px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+  table.rp-annual th:first-child{text-align:left;}
+  table.rp-annual td.band{
+    background:var(--brand-navy);color:#fff;font-weight:700;text-align:left;font-size:.9rem;
+    border-bottom:1px solid #fff;
   }
-  table.ops-table thead th{
-    color:var(--brand-navy);font-size:.68rem;text-transform:uppercase;letter-spacing:.02em;
-    font-weight:700;border-bottom:2px solid var(--brand-navy);background:var(--accent-wash);
-    padding:8px 6px;white-space:normal;line-height:1.25;
+  table.rp-annual td.rate-cell{position:relative;padding:0;font-weight:700;}
+  table.rp-annual .bar-track{position:absolute;inset:6px 8px;background:var(--border);border-radius:4px;overflow:hidden;}
+  table.rp-annual .bar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);opacity:.75;}
+  table.rp-annual .bar-txt{position:relative;display:block;padding:0 14px;line-height:32px;color:var(--text-primary);}
+
+  table.rp-ops{font-size:.82rem;}
+  table.rp-ops th{
+    background:var(--accent-wash);color:var(--brand-navy);font-size:.7rem;font-weight:700;line-height:1.25;
+    padding:6px 8px;text-align:right;border-bottom:2px solid var(--brand-navy);vertical-align:bottom;
   }
-  table.ops-table tbody tr.subtotal td{font-weight:700;background:rgba(0,0,0,.04);border-top:1px solid var(--border);}
-  table.ops-table tbody tr.grand-total td{font-weight:700;background:var(--brand-navy);color:#fff;border-bottom:none;}
+  table.rp-ops th:nth-child(-n+2){text-align:left;}
+  table.rp-ops td{padding:0 8px;height:27px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;}
+  table.rp-ops td.grp{
+    text-align:center;font-weight:700;color:var(--brand-navy);background:var(--accent-wash);
+    border-right:1px solid var(--border);border-bottom:1px solid var(--baseline);
+  }
+  table.rp-ops td.ch{text-align:left;}
+  table.rp-ops tr.subtotal td{background:#e7e7e7;font-weight:700;border-bottom:1px solid var(--baseline);}
+  table.rp-ops tr.subtotal td.lbl{text-align:left;}
+  table.rp-ops tr.grand-total td{background:var(--brand-navy);color:#fff;font-weight:700;border-bottom:none;height:30px;}
+  table.rp-ops tr.grand-total td.lbl{text-align:left;}
+  .neg{color:var(--trend-down);}
+  table.rp-ops tr.grand-total .neg{color:#ffb3c0;}
+  .rp-note{margin:8px 0 0;font-size:.76rem;color:var(--text-muted);}
 
 </style>
 
@@ -268,7 +316,7 @@
       <div class="top-left">
         <div class="eyebrow">Life Extension · 内部看板</div>
         <h1>净销售看板</h1>
-        <p class="subtitle">净销售趋势与渠道拆解,仅供Pattern内部使用,请勿对外分享。数据按天更新,截至前一天。</p>
+        <p class="subtitle">仅供Pattern内部使用,请勿对外分享。数据每天北京时间10:30、18:00自动更新。</p>
         <span class="demo-badge" id="syncBadge">同步中…</span>
       </div>
       <div class="seg" id="currencySeg" role="group" aria-label="Currency">
@@ -280,21 +328,38 @@
 
   <div class="empty-state" id="emptyState" hidden>运营团队还没有开始填报数据,数据到位后本页会自动更新。</div>
 
-  <section class="card data-dependent" id="annualCard">
-    <h2>FY26 业绩进度</h2>
-    <p class="card-sub">净销售口径,按自然年(2026年1月1日起)累计;下方拆分B2B / B2C两个口径。</p>
-    <div class="table-scroll">
-      <table class="annual-table" id="annualTable"></table>
+  <!-- ============ MODULE 1 · 日报 ============ -->
+  <section class="module module-daily data-dependent" id="dailyModule">
+    <div class="module-bar">
+      <div class="mod-title"><h2>日报</h2><span class="mod-sub">每日截图发群用 · 仅此模块受右侧日期控制</span></div>
+      <div class="date-pick">
+        <label for="dailyDate">统计日期</label>
+        <button class="sq" id="dayPrev" aria-label="前一天">‹</button>
+        <input type="date" id="dailyDate">
+        <button class="sq" id="dayNext" aria-label="后一天">›</button>
+        <button id="dayToday">今天</button>
+      </div>
+    </div>
+    <div class="module-body">
+      <div class="report" id="reportShot">
+        <div class="rp-head">
+          <div><span class="rp-k">统计日期</span><span class="rp-date" id="rpDate">—</span><span class="rp-wd" id="rpWd"></span></div>
+          <div class="rp-meta" id="rpMeta"></div>
+        </div>
+        <table class="rp-annual" id="annualTable"></table>
+        <div class="rp-sec"><b>运营模式明细</b><span id="opsSub">统计区间:—</span></div>
+        <table class="rp-ops" id="opsTable"></table>
+        <p class="rp-note" id="rpNote" hidden></p>
+      </div>
     </div>
   </section>
 
-  <section class="card data-dependent" id="opsCard">
-    <h2>运营模式明细</h2>
-    <p class="card-sub" id="opsSub">当前统计区间:—</p>
-    <div class="table-scroll">
-      <table class="ops-table" id="opsTable"></table>
+  <!-- ============ MODULE 2 · 销售看板 ============ -->
+  <section class="module module-board data-dependent" id="boardModule">
+    <div class="module-bar">
+      <div class="mod-title"><h2>销售看板</h2><span class="mod-sub">趋势与渠道拆解 · 与日报日期无关</span></div>
     </div>
-  </section>
+    <div class="module-body">
 
   <div class="filters data-dependent" id="topFilters">
     <div class="group">
@@ -371,6 +436,9 @@
       <table class="detail" id="detailTable"></table>
     </div>
   </section>
+
+    </div><!-- /module-body -->
+  </section><!-- /module-board -->
 
 </div>
 
@@ -1024,95 +1092,205 @@
     renderTable();
   }
 
-  // ---- FY26 annual progress + 运营模式明细 (target data, computed server-side
-  // at build time by build_netsales_dashboard.py and injected as REAL_TARGETS;
-  // not period/filter-dependent, only currency-toggle-dependent) ----
+  // ================= 日报 (daily report) =================
+  // All date-dependent math happens here in the browser so the date picker can
+  // show any past date. Inputs: REAL_RECORDS (daily per-channel net sales) and
+  // REAL_TARGETS.blocks (per-period per-channel net-sales targets from the
+  // 【无需填写】当月目标及进度 sheet; Sep+Oct share one combined block).
+  var BLOCKS = ((REAL_TARGETS && REAL_TARGETS.blocks) || []).map(function(b){
+    return {label:b.label, start:parseDate(b.start), end:parseDate(b.end), targets:b.targets || {}};
+  });
+  var B2B_KEYS = {tmall_alihealth:1, tmall_tdi:1, jd_self:1, b2b:1};
+  var DAILY_ROWS = {
+    b2c: [["tmall_flagship","天猫旗舰店"],["jd_pop","京东POP"],["douyin","抖音"],["red","小红书"],["vip","唯品会"],["pdd","拼多多"]],
+    b2b: [["tmall_alihealth","AliHealth"],["tmall_tdi","TDI"],["jd_self","京东自营"],["b2b","分销"]]
+  };
+  var WEEKDAYS = ["周日","周一","周二","周三","周四","周五","周六"];
+
   function fmtPct(r){ return (r === null || r === undefined) ? "—" : (r * 100).toFixed(1) + "%"; }
   function fmtMoneySigned(n){
     if (n === null || n === undefined) return "—";
     var sign = n < 0 ? "-" : "";
     return sign + currencySymbol() + Math.round(Math.abs(convertCurrency(n))).toLocaleString("en-US");
   }
-
-  function renderAnnualTable(){
-    var table = document.getElementById("annualTable");
-    table.innerHTML = "";
-    var annual = REAL_TARGETS.annual || {};
-    var groups = [
-      {key:"total", label:"FY26 业绩进度", sub:"全年净销售目标"},
-      {key:"b2b", label:"B2B", sub:"年度目标"},
-      {key:"b2c", label:"B2C", sub:"年度目标"}
-    ];
-    groups.forEach(function(g){
-      var data = annual[g.key] || {target:0, ytd:0, remaining:0, rate:null};
-      var headTr = document.createElement("tr");
-      headTr.className = "grp-header";
-      [g.label, g.sub, "YTD", "剩余目标", "目标完成率"].forEach(function(txt){
-        var td = document.createElement("td");
-        td.textContent = txt;
-        headTr.appendChild(td);
-      });
-      table.appendChild(headTr);
-
-      var dataTr = document.createElement("tr");
-      dataTr.className = "grp-data";
-      [ "", fmtMoneySigned(data.target), fmtMoneySigned(data.ytd), fmtMoneySigned(data.remaining), fmtPct(data.rate) ].forEach(function(txt){
-        var td = document.createElement("td");
-        td.textContent = txt;
-        dataTr.appendChild(td);
-      });
-      table.appendChild(dataTr);
+  function sumByChannel(start, end){
+    var out = {};
+    SUBCHANNELS.forEach(function(sc){ out[sc.key] = 0; });
+    records.forEach(function(r){
+      if (r.date >= start && r.date <= end) SUBCHANNELS.forEach(function(sc){ out[sc.key] += r[sc.key]; });
     });
+    return out;
+  }
+  function bizSum(map, biz){
+    var t = 0;
+    for (var k in map){
+      var isB2b = !!B2B_KEYS[k];
+      if (biz === "all" || (biz === "b2b") === isB2b) t += map[k];
+    }
+    return t;
+  }
+  function cell(tr, txt, cls){
+    var td = document.createElement("td");
+    td.textContent = txt;
+    if (cls) td.className = cls;
+    tr.appendChild(td);
+    return td;
   }
 
-  function renderOpsTable(){
-    var table = document.getElementById("opsTable");
-    var sub = document.getElementById("opsSub");
+  function renderAnnualTable(D){
+    var table = document.getElementById("annualTable");
     table.innerHTML = "";
-    var cp = REAL_TARGETS.current_period;
-    if (!cp){
-      sub.textContent = "当前日期没有对应的目标区间,请检查目标sheet是否已添加本月的目标区块。";
-      return;
-    }
-    sub.textContent = "当前统计区间:" + cp.label + "(至 " + cp.end_date + ")";
+    var year = D.getFullYear();
+    var fy = "FY" + String(year).slice(2);
+    var annualT = {};
+    SUBCHANNELS.forEach(function(sc){ annualT[sc.key] = 0; });
+    BLOCKS.forEach(function(b){
+      if (b.start.getFullYear() !== year) return;
+      for (var k in b.targets) annualT[k] = (annualT[k] || 0) + (b.targets[k] || 0);
+    });
+    var ytd = sumByChannel(new Date(year, 0, 1), D);
+
+    var colgroup = document.createElement("colgroup");
+    [22, 19, 19, 19, 21].forEach(function(w){
+      var c = document.createElement("col"); c.style.width = w + "%"; colgroup.appendChild(c);
+    });
+    table.appendChild(colgroup);
 
     var thead = document.createElement("thead");
     var htr = document.createElement("tr");
-    ["渠道", "当日净销售", cp.label + "净销售目标", "MTD", "剩余目标", "目标完成率", "月目标每日任需完成目标"].forEach(function(h){
-      var th = document.createElement("th");
-      th.textContent = h;
-      htr.appendChild(th);
+    ["", "全年净销售目标", "YTD 净销售", "剩余目标", "目标完成率"].forEach(function(h){
+      var th = document.createElement("th"); th.textContent = h; htr.appendChild(th);
     });
     thead.appendChild(htr);
     table.appendChild(thead);
 
     var tbody = document.createElement("tbody");
-    function addRow(label, r, cls){
+    [["all", fy + " 业绩进度"], ["b2b", "B2B"], ["b2c", "B2C"]].forEach(function(g){
+      var target = bizSum(annualT, g[0]), y = bizSum(ytd, g[0]);
+      var rate = target ? y / target : null;
       var tr = document.createElement("tr");
-      if (cls) tr.className = cls;
-      [label, fmtMoneySigned(r.today), fmtMoneySigned(r.target), fmtMoneySigned(r.mtd),
-       fmtMoneySigned(r.remaining), fmtPct(r.rate), fmtMoneySigned(r.pace)].forEach(function(txt){
-        var td = document.createElement("td");
-        td.textContent = txt;
-        tr.appendChild(td);
-      });
+      cell(tr, g[1], "band");
+      cell(tr, fmtMoneySigned(target));
+      cell(tr, fmtMoneySigned(y));
+      cell(tr, fmtMoneySigned(target - y), target - y < 0 ? "neg" : "");
+      var td = document.createElement("td");
+      td.className = "rate-cell";
+      var track = document.createElement("div"); track.className = "bar-track";
+      var fill = document.createElement("div"); fill.className = "bar-fill";
+      fill.style.width = (rate === null ? 0 : Math.min(rate, 1) * 100) + "%";
+      track.appendChild(fill);
+      td.appendChild(track);
+      var txt = document.createElement("span"); txt.className = "bar-txt"; txt.textContent = fmtPct(rate);
+      td.appendChild(txt);
+      tr.appendChild(td);
       tbody.appendChild(tr);
-    }
-
-    cp.rows.filter(function(r){ return r.biz === "b2c"; }).forEach(function(r){ addRow(r.label, r); });
-    addRow("B2C 小计", cp.subtotals.b2c, "subtotal");
-    cp.rows.filter(function(r){ return r.biz === "b2b"; }).forEach(function(r){ addRow(r.label, r); });
-    addRow("B2B 小计", cp.subtotals.b2b, "subtotal");
-    addRow("总计", cp.subtotals.total, "grand-total");
-
+    });
     table.appendChild(tbody);
+  }
+
+  function renderOpsTable(D){
+    var table = document.getElementById("opsTable");
+    var sub = document.getElementById("opsSub");
+    var note = document.getElementById("rpNote");
+    table.innerHTML = "";
+    note.hidden = true;
+    var blk = null;
+    BLOCKS.forEach(function(b){ if (b.start <= D && D <= b.end) blk = b; });
+    if (!blk){
+      sub.textContent = "统计区间:—";
+      note.hidden = false;
+      note.textContent = "所选日期没有对应的目标区间(目标sheet里还没有这个月的目标区块),暂无法计算运营模式明细。";
+      return;
+    }
+    var dayMap = sumByChannel(D, D);
+    var mtdMap = sumByChannel(blk.start, D);
+    var remDays = Math.max(Math.round((blk.end - D) / 86400000), 0);
+    sub.textContent = "统计区间:" + blk.label + "(" + fmtDate(blk.start) + " ~ " + fmtDate(blk.end) + ",剩余 " + remDays + " 天)";
+
+    var colgroup = document.createElement("colgroup");
+    [7, 13, 14, 14, 14, 14, 11, 13].forEach(function(w){
+      var c = document.createElement("col"); c.style.width = w + "%"; colgroup.appendChild(c);
+    });
+    table.appendChild(colgroup);
+
+    var thead = document.createElement("thead");
+    var htr = document.createElement("tr");
+    ["运营模式", "渠道", "当日净销售", "区间净销售目标", "MTD 净销售", "剩余目标", "目标完成率", "每日需完成目标"].forEach(function(h){
+      var th = document.createElement("th"); th.textContent = h; htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    function metrics(dayV, target, mtd){
+      var remaining = target - mtd;
+      return {day: dayV, target: target, mtd: mtd, remaining: remaining,
+              rate: target ? mtd / target : null, pace: remDays > 0 ? remaining / remDays : null};
+    }
+    function fillMetrics(tr, m){
+      cell(tr, fmtMoneySigned(m.day));
+      cell(tr, fmtMoneySigned(m.target));
+      cell(tr, fmtMoneySigned(m.mtd));
+      cell(tr, fmtMoneySigned(m.remaining), m.remaining < 0 ? "neg" : "");
+      cell(tr, fmtPct(m.rate));
+      cell(tr, fmtMoneySigned(m.pace), m.pace !== null && m.pace < 0 ? "neg" : "");
+    }
+    function groupRows(biz, title){
+      DAILY_ROWS[biz].forEach(function(item, i){
+        var k = item[0];
+        var tr = document.createElement("tr");
+        if (i === 0){
+          var g = cell(tr, title, "grp");
+          g.rowSpan = DAILY_ROWS[biz].length;
+        }
+        cell(tr, item[1], "ch");
+        fillMetrics(tr, metrics(dayMap[k] || 0, blk.targets[k] || 0, mtdMap[k] || 0));
+        tbody.appendChild(tr);
+      });
+      var st = document.createElement("tr");
+      st.className = "subtotal";
+      var lbl = cell(st, title + " 小计", "lbl");
+      lbl.colSpan = 2;
+      var tgt = {}; DAILY_ROWS[biz].forEach(function(it){ tgt[it[0]] = blk.targets[it[0]] || 0; });
+      fillMetrics(st, metrics(bizSum(dayMap, biz), bizSum(tgt, biz), bizSum(mtdMap, biz)));
+      tbody.appendChild(st);
+    }
+    groupRows("b2c", "B2C");
+    groupRows("b2b", "B2B");
+
+    var tt = document.createElement("tr");
+    tt.className = "grand-total";
+    var tl = cell(tt, "TOTAL 总计", "lbl");
+    tl.colSpan = 2;
+    var allT = {}; SUBCHANNELS.forEach(function(sc){ allT[sc.key] = blk.targets[sc.key] || 0; });
+    fillMetrics(tt, metrics(bizSum(dayMap, "all"), bizSum(allT, "all"), bizSum(mtdMap, "all")));
+    tbody.appendChild(tt);
+    table.appendChild(tbody);
+  }
+
+  var firstDate = records[0].date;
+  BLOCKS.forEach(function(b){ if (b.start < firstDate) firstDate = b.start; });
+  var dailyState = { date: today() };
+
+  function renderDaily(){
+    var D = dailyState.date;
+    document.getElementById("rpDate").textContent = fmtDate(D);
+    document.getElementById("rpWd").textContent = WEEKDAYS[D.getDay()] + (fmtDate(D) === fmtDate(today()) ? " · 今天" : "");
+    document.getElementById("rpMeta").textContent =
+      "单位:" + (currencyState.code === "USD" ? "USD $(按 1 USD = " + USD_RATE + " CNY 折算)" : "CNY ¥") +
+      " · 数据更新:" + (BUILD_META.generatedAt || "—");
+    var inp = document.getElementById("dailyDate");
+    inp.value = fmtDate(D);
+    document.getElementById("dayNext").disabled = fmtDate(D) >= fmtDate(today());
+    document.getElementById("dayPrev").disabled = D <= firstDate;
+    renderAnnualTable(D);
+    renderOpsTable(D);
   }
 
   function renderAll(){
     renderTop();
     renderChartSection();
-    renderAnnualTable();
-    renderOpsTable();
+    renderDaily();
   }
 
   // ---- wiring ----
@@ -1170,6 +1348,28 @@
     currencyState.code = btn.getAttribute("data-c");
     renderAll();
   });
+
+  // ---- 日报 date picker (drives ONLY the 日报 module) ----
+  (function(){
+    var inp = document.getElementById("dailyDate");
+    inp.max = fmtDate(today());
+    inp.min = fmtDate(firstDate);
+    inp.addEventListener("change", function(){
+      if (!inp.value) return;
+      var d = parseDate(inp.value);
+      if (d > today()) d = today();
+      dailyState.date = d;
+      renderDaily();
+    });
+    function shift(n){
+      var d = new Date(dailyState.date); d.setDate(d.getDate() + n);
+      if (d > today() || d < firstDate) return;
+      dailyState.date = d; renderDaily();
+    }
+    document.getElementById("dayPrev").addEventListener("click", function(){ shift(-1); });
+    document.getElementById("dayNext").addEventListener("click", function(){ shift(1); });
+    document.getElementById("dayToday").addEventListener("click", function(){ dailyState.date = today(); renderDaily(); });
+  })();
 
   document.getElementById("syncBadge").textContent = "上次更新:" + (BUILD_META.generatedAt || "—");
   document.getElementById("emptyState").hidden = HAS_DATA;

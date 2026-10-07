@@ -174,94 +174,28 @@ def parse_month_blocks(ws):
     return blocks
 
 
-def group_sum(d, biz):
-    return sum(v for k, v in d.items() if BIZ_TYPE.get(k) == biz)
+def build_targets(ws_target):
+    """Export every 统计月份 block's per-channel 当月净销售目标 (col C).
 
-
-def build_targets(ws_target, daily_records, today):
-    blocks = parse_month_blocks(ws_target)
-
-    # YTD actuals: sum every daily net-sales record from Jan 1 of `today`'s
-    # calendar year through today (same YTD convention as the external GMV
-    # dashboard -- Haley confirmed calendar year, 2026-01-01).
-    year_start = dt.date(today.year, 1, 1)
-    ytd_by_channel = {}
-    for rec in daily_records:
-        d = dt.date(*map(int, rec["date"].split("-")))
-        if year_start <= d <= today:
-            for k, v in rec.items():
-                if k == "date":
-                    continue
-                ytd_by_channel[k] = ytd_by_channel.get(k, 0) + v
-
-    # Annual target: sum 当月净销售目标 (col C) across every block that
-    # exists for `today`'s year. Blocks are added by ops one at a time as
-    # the year goes on, so this naturally grows from ~0 towards the real
-    # full-year number over the course of the year -- that's expected, not
-    # a bug (Haley, 2026-10-04: "如果现在抓取是0,就写0").
-    annual_target_by_channel = {}
-    for b in blocks:
-        if b["start"].year != today.year:
-            continue
+    The dashboard page does all date-dependent math in the browser (so the
+    日报 date picker can show any past date): the period containing the chosen
+    date, MTD, remaining target, attainment, daily pace, plus YTD and the
+    full-year target (= sum of this year's blocks). Blocks are added by ops
+    one at a time, so we scan dynamically and never hardcode their number.
+    """
+    blocks = []
+    for b in parse_month_blocks(ws_target):
+        targets = {}
         for k, r in b["channel_rows"].items():
-            v = ws_target.cell(row=r, column=3).value or 0
-            annual_target_by_channel[k] = annual_target_by_channel.get(k, 0) + v
-
-    def rollup(biz):
-        if biz is None:
-            target = sum(annual_target_by_channel.values())
-            ytd = sum(ytd_by_channel.values())
-        else:
-            target = group_sum(annual_target_by_channel, biz)
-            ytd = group_sum(ytd_by_channel, biz)
-        remaining = target - ytd
-        rate = (ytd / target) if target else None
-        return {"target": target, "ytd": ytd, "remaining": remaining, "rate": rate}
-
-    annual = {"total": rollup(None), "b2b": rollup("b2b"), "b2c": rollup("b2c")}
-
-    # Current-period breakdown table: whichever block's date range contains
-    # `today`.
-    current_block = next((b for b in blocks if b["start"] <= today <= b["end"]), None)
-    current_period = None
-    if current_block is not None:
-        today_iso = today.strftime("%Y-%m-%d")
-        today_rec = next((r for r in daily_records if r["date"] == today_iso), {})
-        rows = []
-        for k, r in current_block["channel_rows"].items():
-            month_target = ws_target.cell(row=r, column=3).value or 0
-            mtd = ws_target.cell(row=r, column=5).value or 0
-            today_val = today_rec.get(k, 0) or 0
-            remaining_target = month_target - mtd
-            rate = (mtd / month_target) if month_target else None
-            remaining_days = max((current_block["end"] - today).days, 0)
-            daily_pace = (remaining_target / remaining_days) if remaining_days > 0 else None
-            rows.append({
-                "key": k, "label": DISPLAY_LABELS[k], "biz": BIZ_TYPE[k],
-                "today": today_val, "target": month_target, "mtd": mtd,
-                "remaining": remaining_target, "rate": rate, "pace": daily_pace,
-            })
-
-        def subtotal(biz):
-            grp = [r for r in rows if biz is None or r["biz"] == biz]
-            s_today = sum(r["today"] for r in grp)
-            s_target = sum(r["target"] for r in grp)
-            s_mtd = sum(r["mtd"] for r in grp)
-            s_remaining = sum(r["remaining"] for r in grp)
-            s_rate = (s_mtd / s_target) if s_target else None
-            remaining_days = max((current_block["end"] - today).days, 0)
-            s_pace = (s_remaining / remaining_days) if remaining_days > 0 else None
-            return {"today": s_today, "target": s_target, "mtd": s_mtd,
-                    "remaining": s_remaining, "rate": s_rate, "pace": s_pace}
-
-        current_period = {
-            "label": current_block["label"],
-            "end_date": current_block["end"].strftime("%Y-%m-%d"),
-            "rows": rows,
-            "subtotals": {"b2c": subtotal("b2c"), "b2b": subtotal("b2b"), "total": subtotal(None)},
-        }
-
-    return {"annual": annual, "current_period": current_period}
+            targets[k] = ws_target.cell(row=r, column=3).value or 0
+        blocks.append({
+            "label": b["label"],
+            "start": b["start"].strftime("%Y-%m-%d"),
+            "end": b["end"].strftime("%Y-%m-%d"),
+            "targets": targets,
+        })
+    blocks.sort(key=lambda x: x["start"])
+    return {"blocks": blocks}
 
 
 def inject(template_path, out_path, records, targets):
@@ -276,7 +210,9 @@ def inject(template_path, out_path, records, targets):
     if marker not in html:
         raise RuntimeError("template marker not found -- did the template change?")
 
-    generated_at = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    # GitHub Actions runs in UTC -- stamp the page in Beijing time (UTC+8).
+    bj = dt.timezone(dt.timedelta(hours=8))
+    generated_at = dt.datetime.now(bj).strftime("%Y-%m-%d %H:%M") + "(北京时间)"
     meta = {
         "generatedAt": generated_at,
         "sourceNote": "运营渠道数据填报表 · 每日填报 · 净销售(内部口径)",
@@ -310,12 +246,11 @@ def main():
 
     wb = openpyxl.load_workbook(xlsx_tmp, data_only=True)
     daily_records = parse_netsales_records(wb[DAILY_SHEET])
-    today = dt.datetime.now().date()
-    targets = build_targets(wb[TARGET_SHEET], daily_records, today)
+    targets = build_targets(wb[TARGET_SHEET])
 
     inject(template_path, out_path, daily_records, targets)
     print(f"wrote {out_path} with {len(daily_records)} day-records, "
-          f"current_period={'yes' if targets['current_period'] else 'NONE (today outside all target blocks)'}")
+          f"{len(targets['blocks'])} target blocks")
 
 
 if __name__ == "__main__":
