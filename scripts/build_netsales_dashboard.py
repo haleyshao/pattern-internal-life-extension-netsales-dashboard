@@ -32,6 +32,7 @@ SHARE_URL = os.environ.get("ONEDRIVE_URL")
 
 DAILY_SHEET = "每日填报"
 TARGET_SHEET = "【无需填写】当月目标及进度"
+BYDAY_SHEET = "渠道目标by day拆解"
 
 # 每日填报 sheet: 每日净销售达成 block (date row 33, channel rows 34-43)
 NETSALES_DATE_ROW = 33
@@ -166,34 +167,120 @@ def parse_month_blocks(ws):
             period_val = ws.cell(row=r, column=4).value
             start, end, label = parse_period(period_val)
             channel_rows = {}
-            for cr in range(r + 3, r + 13):
+            # scan down until the 合计 row (don't assume exactly 10 channel
+            # rows -- ops may add/insert rows, e.g. a new channel)
+            for cr in range(r + 3, min(r + 40, ws.max_row + 1)):
                 label_cn = ws.cell(row=cr, column=1).value
+                if label_cn == "合计" or label_cn == "统计月份":
+                    break
                 if label_cn in CHANNEL_MAP:
                     channel_rows[CHANNEL_MAP[label_cn]] = cr
             blocks.append({"start": start, "end": end, "label": label, "channel_rows": channel_rows})
     return blocks
 
 
-def build_targets(ws_target):
-    """Export every 统计月份 block's per-channel 当月净销售目标 (col C).
+def parse_byday_net_targets(ws):
+    """渠道目标by day拆解 -> 净销售目标 block.
+
+    Returns {channel_key: {"days": {iso: value}, "sums": {(year, month): value}}}.
+
+    * "sums" = the monthly 汇总 columns ("9月汇总", "10月汇总", ...). Ops can't
+      fill per-day targets yet, so they type the monthly targets straight into
+      these columns (Haley, 2026-10-07: AF/BL/CQ/DW); once per-day targets are
+      filled in later, those same columns become SUM formulas over the days,
+      so reading them works in both situations. This is the PRIMARY source.
+    * "days" = per-day cells (fallback / cross-check only).
+    """
+    out = {}
+    if ws is None:
+        return out
+    top = None
+    for r in range(1, ws.max_row + 1):
+        if ws.cell(row=r, column=1).value == "净销售目标":
+            top = r
+            break
+    if top is None:
+        return out
+    date_row = top + 1
+    date_cols = []      # (col, iso)
+    sum_cols = []       # (col, (year, month))
+    last_date = None
+    for c in range(2, ws.max_column + 1):
+        hv = ws.cell(row=date_row, column=c).value
+        iso = cell_to_iso_date(hv)
+        if iso:
+            date_cols.append((c, iso))
+            last_date = iso
+        elif isinstance(hv, str):
+            m = re.match(r"\s*(\d{1,2})月汇总", hv)
+            if m and last_date:
+                # the 汇总 column sits right after that month's last day; take
+                # the year from the preceding date cell
+                sum_cols.append((c, (int(last_date[:4]), int(m.group(1)))))
+    for r in range(date_row + 1, min(date_row + 40, ws.max_row + 1)):
+        label = ws.cell(row=r, column=1).value
+        if label == "合计":
+            break
+        if label in CHANNEL_MAP:
+            key = CHANNEL_MAP[label]
+            days, sums = {}, {}
+            for c, iso in date_cols:
+                v = ws.cell(row=r, column=c).value
+                if isinstance(v, (int, float)) and v:
+                    days[iso] = v
+            for c, ym in sum_cols:
+                v = ws.cell(row=r, column=c).value
+                if isinstance(v, (int, float)):
+                    sums[ym] = v
+            out[key] = {"days": days, "sums": sums}
+    return out
+
+
+def build_targets(ws_target, ws_byday=None):
+    """Export every 统计月份 block's per-channel 当月净销售目标.
+
+    Source priority per channel per block:
+      1. 渠道目标by day拆解 monthly 汇总 columns (summed over the block's months,
+         e.g. 9~10月 block = 9月汇总 + 10月汇总)
+      2. col C of 【无需填写】当月目标及进度 (a SUM over those same columns)
+      3. sum of the by-day cells inside the block's date range
+    The first non-zero wins. A per-block diagnostic is printed ([targets] lines
+    in the GitHub Actions log) so what was read can be checked against Excel.
 
     The dashboard page does all date-dependent math in the browser (so the
-    日报 date picker can show any past date): the period containing the chosen
-    date, MTD, remaining target, attainment, daily pace, plus YTD and the
-    full-year target (= sum of this year's blocks). Blocks are added by ops
-    one at a time, so we scan dynamically and never hardcode their number.
+    日报 date picker can show any past date).
     """
+    byday = parse_byday_net_targets(ws_byday)
     blocks = []
     for b in parse_month_blocks(ws_target):
-        targets = {}
+        s_iso, e_iso = b["start"].strftime("%Y-%m-%d"), b["end"].strftime("%Y-%m-%d")
+        months = []
+        y, m = b["start"].year, b["start"].month
+        while (y, m) <= (b["end"].year, b["end"].month):
+            months.append((y, m))
+            y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        targets, notes = {}, []
         for k, r in b["channel_rows"].items():
-            targets[k] = ws_target.cell(row=r, column=3).value or 0
-        blocks.append({
-            "label": b["label"],
-            "start": b["start"].strftime("%Y-%m-%d"),
-            "end": b["end"].strftime("%Y-%m-%d"),
-            "targets": targets,
-        })
+            d = byday.get(k, {"days": {}, "sums": {}})
+            summary_v = sum(d["sums"].get(ym, 0) for ym in months)
+            sheet_v = ws_target.cell(row=r, column=3).value or 0
+            days_v = sum(v for dd, v in d["days"].items() if s_iso <= dd <= e_iso)
+            if summary_v:
+                chosen, src = summary_v, "汇总列"
+            elif sheet_v:
+                chosen, src = sheet_v, "当月目标表C列"
+            else:
+                chosen, src = days_v, "按天格子"
+            targets[k] = chosen
+            for name, val in (("汇总列", summary_v), ("当月目标表C列", sheet_v), ("按天格子", days_v)):
+                if val and name != src and abs(val - chosen) > 1:
+                    notes.append(f"{k}: {name}={val:,.0f} differs from chosen {src}={chosen:,.0f}")
+        blocks.append({"label": b["label"], "start": s_iso, "end": e_iso, "targets": targets})
+        filled = {k: round(v) for k, v in targets.items() if v}
+        print(f"[targets] {b['label']} ({s_iso}~{e_iso}) months={months} channels found={len(b['channel_rows'])} "
+              f"non-zero net-sales targets={filled or 'NONE'}")
+        for n in notes:
+            print(f"[targets]   note: {n}")
     blocks.sort(key=lambda x: x["start"])
     return {"blocks": blocks}
 
@@ -246,7 +333,8 @@ def main():
 
     wb = openpyxl.load_workbook(xlsx_tmp, data_only=True)
     daily_records = parse_netsales_records(wb[DAILY_SHEET])
-    targets = build_targets(wb[TARGET_SHEET])
+    byday = wb[BYDAY_SHEET] if BYDAY_SHEET in wb.sheetnames else None
+    targets = build_targets(wb[TARGET_SHEET], byday)
 
     inject(template_path, out_path, daily_records, targets)
     print(f"wrote {out_path} with {len(daily_records)} day-records, "

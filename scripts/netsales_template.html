@@ -331,13 +331,13 @@
   <!-- ============ MODULE 1 · 日报 ============ -->
   <section class="module module-daily data-dependent" id="dailyModule">
     <div class="module-bar">
-      <div class="mod-title"><h2>日报</h2><span class="mod-sub">每日截图发群用 · 仅此模块受右侧日期控制</span></div>
+      <div class="mod-title"><h2>日报</h2><span class="mod-sub">默认显示昨日数据 · 仅此模块受右侧日期控制</span></div>
       <div class="date-pick">
         <label for="dailyDate">统计日期</label>
         <button class="sq" id="dayPrev" aria-label="前一天">‹</button>
         <input type="date" id="dailyDate">
         <button class="sq" id="dayNext" aria-label="后一天">›</button>
-        <button id="dayToday">今天</button>
+        <button id="dayToday">昨天</button>
       </div>
     </div>
     <div class="module-body">
@@ -1215,7 +1215,7 @@
 
     var thead = document.createElement("thead");
     var htr = document.createElement("tr");
-    ["运营模式", "渠道", "当日净销售", "区间净销售目标", "MTD 净销售", "剩余目标", "目标完成率", "每日需完成目标"].forEach(function(h){
+    ["运营模式", "渠道", "当日净销售", blk.label.replace(/^\d{4}年/, "") + "净销售目标", "MTD 净销售", "剩余目标", "目标完成率", "每日需完成目标"].forEach(function(h){
       var th = document.createElement("th"); th.textContent = h; htr.appendChild(th);
     });
     thead.appendChild(htr);
@@ -1270,18 +1270,21 @@
 
   var firstDate = records[0].date;
   BLOCKS.forEach(function(b){ if (b.start < firstDate) firstDate = b.start; });
-  var dailyState = { date: today() };
+  // The ops team fills in yesterday's numbers each day, so the 日报 defaults to
+  // yesterday (and can't go past it -- today's figures aren't in yet).
+  function yesterday(){ var d = today(); d.setDate(d.getDate() - 1); return d; }
+  var dailyState = { date: yesterday() < firstDate ? today() : yesterday() };
 
   function renderDaily(){
     var D = dailyState.date;
     document.getElementById("rpDate").textContent = fmtDate(D);
-    document.getElementById("rpWd").textContent = WEEKDAYS[D.getDay()] + (fmtDate(D) === fmtDate(today()) ? " · 今天" : "");
+    document.getElementById("rpWd").textContent = WEEKDAYS[D.getDay()] + (fmtDate(D) === fmtDate(yesterday()) ? " · 昨日" : "");
     document.getElementById("rpMeta").textContent =
       "单位:" + (currencyState.code === "USD" ? "USD $(按 1 USD = " + USD_RATE + " CNY 折算)" : "CNY ¥") +
       " · 数据更新:" + (BUILD_META.generatedAt || "—");
     var inp = document.getElementById("dailyDate");
     inp.value = fmtDate(D);
-    document.getElementById("dayNext").disabled = fmtDate(D) >= fmtDate(today());
+    document.getElementById("dayNext").disabled = fmtDate(D) >= fmtDate(yesterday());
     document.getElementById("dayPrev").disabled = D <= firstDate;
     renderAnnualTable(D);
     renderOpsTable(D);
@@ -1352,23 +1355,23 @@
   // ---- 日报 date picker (drives ONLY the 日报 module) ----
   (function(){
     var inp = document.getElementById("dailyDate");
-    inp.max = fmtDate(today());
+    inp.max = fmtDate(yesterday());
     inp.min = fmtDate(firstDate);
     inp.addEventListener("change", function(){
       if (!inp.value) return;
       var d = parseDate(inp.value);
-      if (d > today()) d = today();
+      if (d > yesterday()) d = yesterday();
       dailyState.date = d;
       renderDaily();
     });
     function shift(n){
       var d = new Date(dailyState.date); d.setDate(d.getDate() + n);
-      if (d > today() || d < firstDate) return;
+      if (d > yesterday() || d < firstDate) return;
       dailyState.date = d; renderDaily();
     }
     document.getElementById("dayPrev").addEventListener("click", function(){ shift(-1); });
     document.getElementById("dayNext").addEventListener("click", function(){ shift(1); });
-    document.getElementById("dayToday").addEventListener("click", function(){ dailyState.date = today(); renderDaily(); });
+    document.getElementById("dayToday").addEventListener("click", function(){ dailyState.date = yesterday(); renderDaily(); });
   })();
 
   document.getElementById("syncBadge").textContent = "上次更新:" + (BUILD_META.generatedAt || "—");
