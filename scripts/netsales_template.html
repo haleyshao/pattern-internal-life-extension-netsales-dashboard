@@ -316,7 +316,7 @@
       <div class="top-left">
         <div class="eyebrow">Life Extension · 内部看板</div>
         <h1>净销售看板</h1>
-        <p class="subtitle">仅供Pattern内部使用,请勿对外分享。数据每天北京时间10:30、18:00自动更新。</p>
+        <p class="subtitle">仅供Pattern内部使用,请勿对外分享。数据每天北京时间10:30、18:00自动更新,统计截至前一天。</p>
         <span class="demo-badge" id="syncBadge">同步中…</span>
       </div>
       <div class="seg" id="currencySeg" role="group" aria-label="Currency">
@@ -522,6 +522,10 @@
   }
   function daysInMonth(y, m){ return new Date(y, m+1, 0).getDate(); }
   function today(){ var d = new Date(); d.setHours(0,0,0,0); return d; }
+  // The ops team fills in yesterday's numbers each day, so every figure on the
+  // page runs through YESTERDAY at most -- never today (today's data isn't in yet).
+  function latestDay(){ var d = today(); d.setDate(d.getDate() - 1); return d; }
+  var yesterday = latestDay;
   function mondayOfWeek(d){
     var dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     var day = (dt.getDay() + 6) % 7; // Mon=0
@@ -543,11 +547,11 @@
   // ================= full-calendar helpers (never skip empty days) =================
   function fullMonthRecords(y, m){
     var lastDay = daysInMonth(y, m);
-    var t = today();
-    var cap = (y === t.getFullYear() && m === t.getMonth()) ? t.getDate() : lastDay;
+    var latest = latestDay();
     var out = [];
-    for (var d = 1; d <= cap; d++){
+    for (var d = 1; d <= lastDay; d++){
       var dt = new Date(y, m, d);
+      if (dt > latest) break;
       var rec = recordsByISO[fmtDate(dt)];
       var row = {date: dt};
       SUBCHANNELS.forEach(function(sc){ row[sc.key] = rec ? (rec[sc.key] || 0) : 0; });
@@ -556,7 +560,7 @@
     return out;
   }
   function fullYearRecords(y){
-    var t = today();
+    var t = latestDay();
     var firstRec = records[0].date;
     var lastMonth = (y === t.getFullYear()) ? t.getMonth() : 11;
     var startMonth = (y === firstRec.getFullYear()) ? firstRec.getMonth() : 0;
@@ -595,11 +599,12 @@
       var lmStart = new Date(lmEnd.getFullYear(), lmEnd.getMonth(), 1);
       return {start: lmStart, end: lmEnd};
     }
+    var L = latestDay();
     if (topState.preset === "ytd"){
-      return {start: new Date(t.getFullYear(), 0, 1), end: t};
+      return {start: new Date(L.getFullYear(), 0, 1), end: L};
     }
     // mtd
-    return {start: new Date(t.getFullYear(), t.getMonth(), 1), end: t};
+    return {start: new Date(L.getFullYear(), L.getMonth(), 1), end: L};
   }
 
   // calendar-aware "previous period" for the vs. Previous Period tile
@@ -761,7 +766,7 @@
   var lastDate = records[records.length - 1].date;
   var chartState = {
     granularity: "day",
-    anchor: new Date(lastDate.getFullYear(), lastDate.getMonth(), 1)
+    anchor: new Date(latestDay().getFullYear(), latestDay().getMonth(), 1)
   };
 
   function isoWeekKey(d){
@@ -990,7 +995,7 @@
     } else {
       lbl.textContent = MONTH_ABBR[chartState.anchor.getMonth()] + " " + chartState.anchor.getFullYear();
     }
-    var t = today();
+    var t = latestDay();
     var atLatest;
     if (chartState.granularity === "month"){
       atLatest = chartState.anchor.getFullYear() >= t.getFullYear();
@@ -1003,7 +1008,6 @@
 
   function renderTable(){
     var y = chartState.anchor.getFullYear(), m = chartState.anchor.getMonth();
-    var t = today();
     var dayRows = fullMonthRecords(y, m);
 
     var monthTotals = {}; SUBCHANNELS.forEach(function(sc){ monthTotals[sc.key] = 0; });
@@ -1063,12 +1067,6 @@
       var td0 = document.createElement("td");
       td0.style.textAlign = "left";
       td0.textContent = MONTH_ABBR[row.date.getMonth()] + " " + row.date.getDate();
-      if (fmtDate(row.date) === fmtDate(t)){
-        var badge = document.createElement("span");
-        badge.className = "badge-progress";
-        badge.textContent = "进行中";
-        td0.appendChild(badge);
-      }
       tr.appendChild(td0);
       var rowTotal = 0;
       SUBCHANNELS.forEach(function(sc){
@@ -1270,9 +1268,7 @@
 
   var firstDate = records[0].date;
   BLOCKS.forEach(function(b){ if (b.start < firstDate) firstDate = b.start; });
-  // The ops team fills in yesterday's numbers each day, so the 日报 defaults to
-  // yesterday (and can't go past it -- today's figures aren't in yet).
-  function yesterday(){ var d = today(); d.setDate(d.getDate() - 1); return d; }
+  // 日报 defaults to yesterday (latestDay) and can't go past it.
   var dailyState = { date: yesterday() < firstDate ? today() : yesterday() };
 
   function renderDaily(){
@@ -1301,8 +1297,10 @@
   var customRange = document.getElementById("customRange");
   var rangeStartInput = document.getElementById("rangeStart");
   var rangeEndInput = document.getElementById("rangeEnd");
-  rangeEndInput.value = fmtDate(today());
-  var defaultStart = new Date(today()); defaultStart.setDate(defaultStart.getDate()-29);
+  rangeEndInput.value = fmtDate(latestDay());
+  rangeEndInput.max = fmtDate(latestDay());
+  rangeStartInput.max = fmtDate(latestDay());
+  var defaultStart = new Date(latestDay()); defaultStart.setDate(defaultStart.getDate()-29);
   rangeStartInput.value = fmtDate(defaultStart);
 
   presetSel.addEventListener("change", function(){
