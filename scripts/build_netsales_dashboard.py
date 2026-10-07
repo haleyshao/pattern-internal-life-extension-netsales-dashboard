@@ -179,61 +179,103 @@ def parse_month_blocks(ws):
     return blocks
 
 
-def parse_byday_net_targets(ws):
-    """渠道目标by day拆解 -> 净销售目标 block.
+def to_num(v):
+    """Numbers typed as text ('2,000,000', '¥50000', '5万') still count."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        t = v.strip().replace(",", "").replace("¥", "").replace("元", "").replace(" ", "")
+        mult = 1
+        if t.endswith("万"):
+            t, mult = t[:-1], 10000
+        try:
+            return float(t) * mult
+        except ValueError:
+            return None
+    return None
 
-    Returns {channel_key: {"days": {iso: value}, "sums": {(year, month): value}}}.
 
-    * "sums" = the monthly 汇总 columns ("9月汇总", "10月汇总", ...). Ops can't
-      fill per-day targets yet, so they type the monthly targets straight into
-      these columns (Haley, 2026-10-07: AF/BL/CQ/DW); once per-day targets are
-      filled in later, those same columns become SUM formulas over the days,
-      so reading them works in both situations. This is the PRIMARY source.
-    * "days" = per-day cells (fallback / cross-check only).
-    """
-    out = {}
+SUMMARY_HDR = re.compile(r"(\d{1,2})\s*月\s*(汇总|合计|总计|小计)")
+
+
+def parse_byday_sections(ws):
+    """渠道目标by day拆解 holds several stacked blocks ('GMV目标', '净销售目标').
+    For each block return its title and, per channel, the per-day values and
+    the monthly 汇总 column values:
+        [{"title": str, "channels": {key: {"days": {iso: v}, "sums": {(y, m): v}}}}]
+    Block titles / the date-header row are located by content (a col-A title
+    containing '目标'; the next row whose col A is '渠道'), not by fixed row
+    numbers, so inserted rows or small label edits don't break the read."""
+    sections = []
     if ws is None:
-        return out
-    top = None
+        return sections
+    titles = []
     for r in range(1, ws.max_row + 1):
-        if ws.cell(row=r, column=1).value == "净销售目标":
-            top = r
-            break
-    if top is None:
-        return out
-    date_row = top + 1
-    date_cols = []      # (col, iso)
-    sum_cols = []       # (col, (year, month))
-    last_date = None
-    for c in range(2, ws.max_column + 1):
-        hv = ws.cell(row=date_row, column=c).value
-        iso = cell_to_iso_date(hv)
-        if iso:
-            date_cols.append((c, iso))
-            last_date = iso
-        elif isinstance(hv, str):
-            m = re.match(r"\s*(\d{1,2})月汇总", hv)
-            if m and last_date:
-                # the 汇总 column sits right after that month's last day; take
-                # the year from the preceding date cell
-                sum_cols.append((c, (int(last_date[:4]), int(m.group(1)))))
-    for r in range(date_row + 1, min(date_row + 40, ws.max_row + 1)):
         label = ws.cell(row=r, column=1).value
-        if label == "合计":
-            break
-        if label in CHANNEL_MAP:
-            key = CHANNEL_MAP[label]
-            days, sums = {}, {}
-            for c, iso in date_cols:
-                v = ws.cell(row=r, column=c).value
-                if isinstance(v, (int, float)) and v:
-                    days[iso] = v
-            for c, ym in sum_cols:
-                v = ws.cell(row=r, column=c).value
-                if isinstance(v, (int, float)):
-                    sums[ym] = v
-            out[key] = {"days": days, "sums": sums}
-    return out
+        if isinstance(label, str) and "目标" in label and label.strip() not in CHANNEL_MAP:
+            titles.append((r, label.strip()))
+    for r0, title in titles:
+        date_row = None
+        for r in range(r0, min(r0 + 4, ws.max_row + 1)):
+            if ws.cell(row=r, column=1).value == "渠道":
+                date_row = r
+                break
+        if date_row is None:
+            date_row = r0 + 1
+        date_cols, sum_cols, last_date = [], [], None
+        for c in range(2, ws.max_column + 1):
+            hv = ws.cell(row=date_row, column=c).value
+            iso = cell_to_iso_date(hv)
+            if iso:
+                date_cols.append((c, iso))
+                last_date = iso
+            elif isinstance(hv, str):
+                m = SUMMARY_HDR.search(hv)
+                if m and last_date:
+                    sum_cols.append((c, (int(last_date[:4]), int(m.group(1)))))
+        channels = {}
+        for r in range(date_row + 1, min(date_row + 40, ws.max_row + 1)):
+            label = ws.cell(row=r, column=1).value
+            if label == "合计":
+                break
+            if label in CHANNEL_MAP:
+                days, sums = {}, {}
+                for c, iso in date_cols:
+                    v = to_num(ws.cell(row=r, column=c).value)
+                    if v:
+                        days[iso] = v
+                for c, ym in sum_cols:
+                    v = to_num(ws.cell(row=r, column=c).value)
+                    if v is not None:
+                        sums[ym] = v
+                channels[CHANNEL_MAP[label]] = {"days": days, "sums": sums}
+        sections.append({"title": title, "row": r0, "date_row": date_row,
+                         "sum_cols": [ym for _, ym in sum_cols], "channels": channels})
+    return sections
+
+
+def parse_byday_net_targets(ws):
+    """Pick the 净销售目标 block out of 渠道目标by day拆解 (never the GMV one) and
+    print what every block contained, so the Actions log can be compared with
+    Excel line by line."""
+    sections = parse_byday_sections(ws)
+    for sec in sections:
+        tot = {}
+        for key, d in sec["channels"].items():
+            for ym, v in d["sums"].items():
+                tot.setdefault(ym, {})[key] = round(v)
+        print(f"[by-day] block '{sec['title']}' (row {sec['row']}, header row {sec['date_row']}) "
+              f"汇总 columns={sec['sum_cols']}")
+        for ym in sorted(tot):
+            nz = {k: v for k, v in tot[ym].items() if v}
+            print(f"[by-day]   {ym[0]}-{ym[1]:02d} 汇总 non-zero: {nz or 'none'}")
+    net = next((x for x in sections if "净销售" in x["title"]), None)
+    if net is None:
+        print("[by-day] WARNING: no block with '净销售' in its title was found")
+        return {}
+    return net["channels"]
 
 
 def build_targets(ws_target, ws_byday=None):
@@ -263,7 +305,7 @@ def build_targets(ws_target, ws_byday=None):
         for k, r in b["channel_rows"].items():
             d = byday.get(k, {"days": {}, "sums": {}})
             summary_v = sum(d["sums"].get(ym, 0) for ym in months)
-            sheet_v = ws_target.cell(row=r, column=3).value or 0
+            sheet_v = to_num(ws_target.cell(row=r, column=3).value) or 0
             days_v = sum(v for dd, v in d["days"].items() if s_iso <= dd <= e_iso)
             if summary_v:
                 chosen, src = summary_v, "汇总列"
